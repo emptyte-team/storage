@@ -56,6 +56,6 @@ public abstract class AggregateRoot {
    * @return The ID of the aggregate as a {@link String}. Never returns {@code null}.
    */
   public @NotNull String id() {
-    return id;
+    return this.id;
   }
 }
