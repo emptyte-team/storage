@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
  * </p>
  *
  * @author team.emptyte
- * @since 1.0.0
+ * @since 0.0.1
  */
 public abstract class AggregateRoot {
 
