@@ -34,6 +34,9 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
 
   /**
    * Synchronously removes an aggregate from the storage by its identifier.
+   * <p>
+   * This operation blocks the calling thread until the deletion is confirmed.
+   * </p>
    *
    * @param id The unique identifier of the aggregate to remove.
    * @return {@code true} if the aggregate existed and was removed; {@code false} otherwise.
@@ -41,15 +44,15 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
   boolean deleteSync(final @NotNull String id);
 
   /**
-   * Removes all aggregates managed by this repository.
+   * Synchronously removes all aggregates managed by this repository.
    * <p>
-   * <b>Warning:</b> This is a destructive operation that clears the entire storage for this type.
+   * <b>Warning:</b> This is a destructive blocking operation that clears the entire storage for this type.
    * </p>
    */
-  void deleteAll();
+  void deleteAllSync();
 
   /**
-   * Atomically retrieves and removes an aggregate from the storage.
+   * Atomically retrieves and removes an aggregate from the storage synchronously.
    * <p>
    * This is useful for processing queues or one-time-use tokens where the object
    * must be consumed and deleted simultaneously.
@@ -58,15 +61,18 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    * @param id The unique identifier of the aggregate.
    * @return The removed aggregate, or {@code null} if it did not exist.
    */
-  @Nullable T deleteAndRetrieve(final @NotNull String id);
+  @Nullable T deleteAndRetrieveSync(final @NotNull String id);
 
   /**
    * Checks if an aggregate exists in the storage without loading its full state.
+   * <p>
+   * This is a lightweight synchronous check (usually an index lookup).
+   * </p>
    *
    * @param id The unique identifier to check.
    * @return {@code true} if the aggregate exists; {@code false} otherwise.
    */
-  boolean exists(final @NotNull String id);
+  boolean existsSync(final @NotNull String id);
 
   /**
    * Synchronously retrieves an aggregate by its identifier.
@@ -79,27 +85,27 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
   /**
    * Retrieves all aggregates and collects them into a collection provided by the factory.
    * <p>
-   * This is a convenience method that delegates to {@link #findAll(Consumer, IntFunction)}
+   * This is a convenience method that delegates to {@link #findAllSync(Consumer, IntFunction)}
    * with an empty post-load action.
    * </p>
    *
    * @param factory A function that accepts the expected size and creates the target Collection (e.g., {@code ArrayList::new}).
    * @param <C>     The type of the Collection.
-   * @return A collection containing all aggregates, or {@code null} if the operation fails internally (depending on impl).
+   * @return A collection containing all aggregates, or {@code null} if the operation fails internally.
    */
-  default <C extends Collection<@NotNull T>> @Nullable C findAll(final @NotNull IntFunction<@NotNull C> factory) {
-    return this.findAll(modelType -> {}, factory);
+  default <C extends Collection<@NotNull T>> @Nullable C findAllSync(final @NotNull IntFunction<@NotNull C> factory) {
+    return this.findAllSync(modelType -> {}, factory);
   }
 
   /**
-   * Retrieves all aggregates, executes a specific action on each, and collects them.
+   * Retrieves all aggregates synchronously, executes a specific action on each, and collects them.
    *
-   * @param postLoadAction A consumer to be executed on each aggregate immediately after loading (e.g., for dependency injection or logging).
+   * @param postLoadAction A consumer to be executed on each aggregate immediately after loading.
    * @param factory        A function that accepts the expected size and creates the target Collection.
    * @param <C>            The type of the Collection.
    * @return A collection containing all loaded aggregates.
    */
-  <C extends Collection<@NotNull T>> @NotNull C findAll(final @NotNull Consumer<@NotNull T> postLoadAction, final @NotNull IntFunction<@NotNull C> factory);
+  <C extends Collection<@NotNull T>> @NotNull C findAllSync(final @NotNull Consumer<@NotNull T> postLoadAction, final @NotNull IntFunction<@NotNull C> factory);
 
   /**
    * Retrieves all unique identifiers (IDs) currently stored in the repository.
@@ -109,7 +115,7 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    *
    * @return A collection of ID strings, or {@code null} if the storage is empty or fails.
    */
-  @Nullable Collection<@NotNull String> findIds();
+  @Nullable Collection<@NotNull String> findIdsSync();
 
   /**
    * Retrieves all unique identifiers and collects them into a collection provided by the factory.
@@ -118,10 +124,13 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    * @param <C>     The type of the Collection.
    * @return A collection of ID strings.
    */
-  <C extends Collection<@NotNull String>> @Nullable C findIds(final @NotNull IntFunction<@NotNull C> factory);
+  <C extends Collection<@NotNull String>> @Nullable C findIdsSync(final @NotNull IntFunction<@NotNull C> factory);
 
   /**
    * Synchronously persists or updates an aggregate in the storage.
+   * <p>
+   * This operation blocks until the data is durably written to the underlying storage.
+   * </p>
    *
    * @param aggregateRoot The aggregate root to save.
    * @return The same instance that was passed, allowing for fluent chaining.
@@ -132,8 +141,8 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
   /**
    * Returns an iterator over all aggregates in the repository.
    * <p>
-   * <b>Note:</b> Depending on the implementation, this might load all objects into memory
-   * or stream them lazily.
+   * <b>Note:</b> While obtaining the iterator might be fast, calling {@code next()}
+   * may perform synchronous I/O depending on the implementation (lazy loading).
    * </p>
    *
    * @return An iterator for type {@code T}.
@@ -167,7 +176,7 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
   /**
    * Performs the given action for each identifier (ID) in the repository.
    * <p>
-   * Useful for bulk operations where only the ID is needed (e.g., checking existence or linking).
+   * Useful for bulk operations where only the ID is needed.
    * </p>
    *
    * @param action The action to be performed for each ID.
