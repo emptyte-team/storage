@@ -113,9 +113,9 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    * This method is optimized for performance as it avoids deserializing the full aggregate objects.
    * </p>
    *
-   * @return A collection of ID strings, or {@code null} if the storage is empty or fails.
+   * @return A collection of ID strings, or an empty collection if none are found.
    */
-  @Nullable Collection<@NotNull String> findIdsSync();
+  @NotNull Collection<@NotNull String> findIdsSync();
 
   /**
    * Retrieves all unique identifiers and collects them into a collection provided by the factory.
