@@ -148,7 +148,6 @@ public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> impl
    * @return A {@link CompletableFuture} containing the collection of IDs.
    */
   public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> findIdsAsync() {
-    // Note: Assuming findIdsSync() returns a non-null collection based on the return signature here
     return CompletableFuture.supplyAsync(this::findIdsSync, this.executor);
   }
 
