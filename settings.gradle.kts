@@ -17,7 +17,9 @@ pluginManagement {
 rootProject.name = "storage"
 
 sequenceOf(
-  "common"
+  "common",
+  "codec",
+  "gson-dist"
 ).forEach {
   include("${rootProject.name}-$it")
   project(":${rootProject.name}-$it").projectDir = file(it)
