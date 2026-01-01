@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":${rootProject.name}-common"))
-  implementation(project(":${rootProject.name}-codec"))
+  api(project(":${rootProject.name}-common"))
+  api(project(":${rootProject.name}-codec"))
+
+  compileOnlyApi(libs.findLibrary("gson").get())
 }
