@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":${rootProject.name}-common"))
+  compileOnly(project(":${rootProject.name}-common"))
 }
