@@ -18,6 +18,7 @@ rootProject.name = "storage"
 
 sequenceOf(
   "common",
+  "codec",
   "gson-dist"
 ).forEach {
   include("${rootProject.name}-$it")
