@@ -23,6 +23,7 @@ import java.util.function.IntFunction;
  * <li><b>Synchronous Operations:</b> Methods suffixed with 'Sync' imply blocking I/O operations.</li>
  * <li><b>Collection Factories:</b> Retrieval methods accept a factory to allow the caller to determine the specific implementation of the returned {@link Collection} (e.g., List, Set).</li>
  * <li><b>ID-only access:</b> Specific methods allow iterating or retrieving only identifiers to minimize memory overhead when the full object is not needed.</li>
+ * <li><b>Null Safety:</b> Collection-returning methods return empty collections instead of {@code null}, reducing the risk of NPEs.</li>
  * </ul>
  * </p>
  *
@@ -91,9 +92,9 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    *
    * @param factory A function that accepts the expected size and creates the target Collection (e.g., {@code ArrayList::new}).
    * @param <C>     The type of the Collection.
-   * @return A collection containing all aggregates, or {@code null} if the operation fails internally.
+   * @return A collection containing all aggregates. Returns an empty collection if none found.
    */
-  default <C extends Collection<@NotNull T>> @Nullable C findAllSync(final @NotNull IntFunction<@NotNull C> factory) {
+  default <C extends Collection<@NotNull T>> @NotNull C findAllSync(final @NotNull IntFunction<@NotNull C> factory) {
     return this.findAllSync(modelType -> {}, factory);
   }
 
@@ -124,7 +125,7 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    * @param <C>     The type of the Collection.
    * @return A collection of ID strings.
    */
-  <C extends Collection<@NotNull String>> @Nullable C findIdsSync(final @NotNull IntFunction<@NotNull C> factory);
+  <C extends Collection<@NotNull String>> @NotNull C findIdsSync(final @NotNull IntFunction<@NotNull C> factory);
 
   /**
    * Synchronously persists or updates an aggregate in the storage.

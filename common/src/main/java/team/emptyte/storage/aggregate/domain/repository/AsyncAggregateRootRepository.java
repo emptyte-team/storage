@@ -147,8 +147,22 @@ public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> impl
    *
    * @return A {@link CompletableFuture} containing the collection of IDs.
    */
-  public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> findIdsAsync() {
+  public @NotNull CompletableFuture<@Nullable Collection<@NotNull String>> findIdsAsync() {
     return CompletableFuture.supplyAsync(this::findIdsSync, this.executor);
+  }
+
+  /**
+   * Asynchronously retrieves all aggregate identifiers and collects them into a provided collection.
+   * <p>
+   * This overload allows controlling the specific type of collection returned (e.g., Set vs List).
+   * </p>
+   *
+   * @param factory The factory to create the collection (e.g., {@code ArrayList::new}).
+   * @param <C>     The specific type of the Collection containing Strings.
+   * @return A {@link CompletableFuture} containing the collection of IDs.
+   */
+  public <C extends Collection<@NotNull String>> @NotNull CompletableFuture<@Nullable C> findIdsAsync(final @NotNull IntFunction<@NotNull C> factory) {
+    return CompletableFuture.supplyAsync(() -> this.findIdsSync(factory), this.executor);
   }
 
   /**
@@ -157,7 +171,7 @@ public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> impl
    * @param aggregateRoot The entity to save.
    * @return A {@link CompletableFuture} containing the saved entity instance.
    */
-  public @NotNull CompletableFuture<@Nullable T> saveAsync(final @NotNull T aggregateRoot) {
+  public @NotNull CompletableFuture<@NotNull T> saveAsync(final @NotNull T aggregateRoot) {
     return CompletableFuture.supplyAsync(() -> this.saveSync(aggregateRoot), this.executor);
   }
 }
