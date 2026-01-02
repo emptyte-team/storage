@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import team.emptyte.storage.aggregate.domain.AggregateRoot;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
@@ -92,7 +93,7 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
    *
    * @param factory A function that accepts the expected size and creates the target Collection (e.g., {@code ArrayList::new}).
    * @param <C>     The type of the Collection.
-   * @return A collection containing all aggregates. Returns an empty collection if none found.
+   * @return A collection containing all aggregates. Returns an empty collection if none is found.
    */
   default <C extends Collection<@NotNull T>> @NotNull C findAllSync(final @NotNull IntFunction<@NotNull C> factory) {
     return this.findAllSync(modelType -> {}, factory);
@@ -111,15 +112,21 @@ public interface AggregateRootRepository<T extends AggregateRoot> extends Iterab
   /**
    * Retrieves all unique identifiers (IDs) currently stored in the repository.
    * <p>
-   * This method is optimized for performance as it avoids deserializing the full aggregate objects.
+   * This is a convenience method that delegates to {@link #findIdsSync(IntFunction)}
+   * using a standard {@link ArrayList} as the container.
    * </p>
    *
-   * @return A collection of ID strings, or an empty collection if none are found.
+   * @return A collection of ID strings. Returns an empty collection if none are found.
    */
-  @NotNull Collection<@NotNull String> findIdsSync();
+  default @NotNull Collection<@NotNull String> findIdsSync() {
+    return this.findIdsSync(ArrayList::new);
+  }
 
   /**
    * Retrieves all unique identifiers and collects them into a collection provided by the factory.
+   * <p>
+   * Use this method if you need a specific collection type (e.g., {@code HashSet} for O(1) lookups).
+   * </p>
    *
    * @param factory A function that accepts the expected size and creates the target Collection.
    * @param <C>     The type of the Collection.
