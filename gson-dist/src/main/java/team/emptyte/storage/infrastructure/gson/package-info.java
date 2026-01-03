@@ -22,4 +22,4 @@
  * @since 0.1.0
  * @see com.google.gson.Gson
  */
-package team.emptyte.storage;
+package team.emptyte.storage.infrastructure.gson;
