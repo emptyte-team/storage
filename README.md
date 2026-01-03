@@ -27,7 +27,7 @@ Since it is not yet on Maven Central, you must build it locally:
 
 ```bash
 # 1. Clone the repository
-git clone [https://github.com/emptyte-team/storage.git](https://github.com/emptyte-team/storage.git)
+git clone https://github.com/emptyte-team/storage.git
 
 # 2. Navigate to the folder
 cd storage
