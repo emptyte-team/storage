@@ -27,22 +27,24 @@ import java.util.stream.Stream;
 
 /**
  * Implementation of {@link team.emptyte.storage.aggregate.domain.repository.AggregateRootRepository} that persists
- * aggregates as <b>JSON files</b> using the Gson library.
+ * aggregates as <b>JSON files</b> using the Google Gson library.
  * <p>
+ * This class acts as a <b>File System Adapter</b> in the Hexagonal Architecture.
  * Each aggregate is stored as a separate file named {@code {id}.json} within the configured {@code folderPath}.
  * </p>
- * <p>
- * <strong>Performance Note:</strong><br>
- * Since this implementation relies on the file system, operations like {@code iterator()} or {@code findAllSync}
- * involve scanning the directory. Performance may degrade with a very large number of files (thousands) in a single folder.
- * </p>
+ * <h3>Performance & Limitations:</h3>
+ * <ul>
+ * <li><b>I/O Bound:</b> All operations involve disk access. Performance depends on the underlying disk speed (SSD vs HDD).</li>
+ * <li><b>Scalability:</b> Operations like {@code findAll} or {@code iterator} require scanning the directory.
+ * Performance may degrade significantly if the folder contains thousands of files.</li>
+ * <li><b>Atomicity:</b> File writes are generally atomic on modern OSs, but this class does not implement transactional locks across multiple files.</li>
+ * </ul>
  *
  * @param <T> The type of the Aggregate Root.
  * @author team.emptyte
- * @since 0.0.1
+ * @since 0.1.0
  */
 public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncAggregateRootRepository<T> {
-  private final Class<T> aggregateRootType;
   private final Path folderPath;
   private final boolean prettyPrint;
   private final AggregateRootSerializer<T, JsonObject> serializer;
@@ -51,16 +53,14 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * Creates a new Gson-based repository with a specific Executor for async operations.
    *
-   * @param executor          The executor to handle background I/O tasks.
-   * @param aggregateRootType The class type of the aggregate (used for reflection/logging if needed).
-   * @param folderPath        The directory where JSON files will be stored. Must exist or be creatable.
-   * @param prettyPrint       If {@code true}, the JSON output will be indented for human readability (increases file size).
-   * @param serializer        The adapter to convert the domain object to a Gson {@link JsonObject}.
-   * @param deserializer      The adapter to reconstitute the domain object from a Gson {@link JsonObject}.
+   * @param executor     The executor to handle background I/O tasks.
+   * @param folderPath   The directory where JSON files will be stored.
+   * @param prettyPrint  If {@code true}, the JSON output will be indented for human readability (increases file size).
+   * @param serializer   The adapter to convert the domain object to a Gson {@link JsonObject}.
+   * @param deserializer The adapter to reconstitute the domain object from a Gson {@link JsonObject}.
    */
   protected GsonAggregateRootRepository(
     final @NotNull Executor executor,
-    final @NotNull Class<T> aggregateRootType,
     final @NotNull Path folderPath,
     final boolean prettyPrint,
     final @NotNull AggregateRootSerializer<T, JsonObject> serializer,
@@ -68,7 +68,6 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   ) {
     super(executor);
 
-    this.aggregateRootType = aggregateRootType;
     this.folderPath = folderPath;
     this.prettyPrint = prettyPrint;
     this.serializer = serializer;
@@ -78,31 +77,45 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * Creates a new Gson-based repository using a default single-thread executor.
    * <p>
-   * <b>Warning:</b> Not recommended for high-throughput production environments.
+   * <b>Warning:</b> This relies on the default executor from the parent class.
+   * Ensure this fits your concurrency model.
    * </p>
    *
-   * @param aggregateRootType The class type of the aggregate.
-   * @param folderPath        The directory where JSON files will be stored.
-   * @param prettyPrint       If {@code true}, format JSON with indentation.
-   * @param serializer        The serializer adapter.
-   * @param deserializer      The deserializer adapter.
+   * @param folderPath   The directory where JSON files will be stored.
+   * @param prettyPrint  If {@code true}, format JSON with indentation.
+   * @param serializer   The serializer adapter.
+   * @param deserializer The deserializer adapter.
    */
   protected GsonAggregateRootRepository(
-    final @NotNull Class<T> aggregateRootType,
     final @NotNull Path folderPath,
     final boolean prettyPrint,
     final @NotNull AggregateRootSerializer<T, JsonObject> serializer,
     final @NotNull AggregateRootDeserializer<T, JsonObject> deserializer
   ) {
-    super(); // Calls parent constructor which creates a single thread executor
+    super();
 
-    this.aggregateRootType = aggregateRootType;
     this.folderPath = folderPath;
     this.prettyPrint = prettyPrint;
     this.serializer = serializer;
     this.deserializer = deserializer;
   }
 
+  /**
+   * Creates a builder to configure and instantiate the repository.
+   *
+   * @param <T> The aggregate type.
+   * @return A new Builder instance.
+   */
+  public static <T extends AggregateRoot> @NotNull GsonAggregateRootRepositoryBuilder<T> builder() {
+    return new GsonAggregateRootRepositoryBuilder<>();
+  }
+
+  /**
+   * Resolves the full path for a specific aggregate ID.
+   *
+   * @param id The aggregate identifier.
+   * @return The absolute path to the {@code .json} file.
+   */
   private @NotNull Path resolveChild(final @NotNull String id) {
     return this.folderPath.resolve(id + ".json");
   }
@@ -110,11 +123,11 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * Extracts the aggregate ID from a given file path.
    * <p>
-   * Assumes the filename format is {@code {id}.json}.
+   * Assumes the filename format is exactly {@code {id}.json}.
    * </p>
    *
    * @param file The path to the file.
-   * @return The ID portion of the filename.
+   * @return The ID portion of the filename (without extension).
    */
   public @NotNull String extractId(final @NotNull Path file) {
     final String fileName = file.getFileName().toString();
@@ -122,12 +135,20 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
     return fileName.substring(0, fileName.length() - 5);
   }
 
+  /**
+   * Internal helper to read and deserialize a file.
+   *
+   * @param file The file path to read.
+   * @return The reconstituted aggregate, or null if the file does not exist.
+   * @throws RuntimeException If an I/O error occurs during reading.
+   */
   private @Nullable T internalFind(final @NotNull Path file) {
     if (!Files.exists(file)) {
       return null;
     }
     try (final JsonReader reader = new JsonReader(Files.newBufferedReader(file))) {
       final JsonObject jsonObject = new JsonObject();
+      // Manual streaming into a JsonObject to avoid loading the full string into memory first
       reader.beginObject();
       while (reader.hasNext()) {
         jsonObject.add(reader.nextName(), TypeAdapters.JSON_ELEMENT.read(reader));
@@ -142,8 +163,7 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote This implementation attempts to delete the file {@code {id}.json}.
-   * Wraps specific {@link IOException} into a generic {@link RuntimeException}.
+   * @implNote Wraps specific {@link IOException} into a generic {@link RuntimeException}.
    */
   @Override
   public boolean deleteSync(final @NotNull String id) {
@@ -157,8 +177,8 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote Uses {@link Files#walk} to traverse the directory and delete all files.
-   * This operation is not atomic.
+   * @implNote Uses {@link Files#walk} to traverse the directory depth-first.
+   * This operation stops at the first failure.
    */
   @Override
   public void deleteAllSync() {
@@ -178,6 +198,7 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
 
   @Override
   public @Nullable T deleteAndRetrieveSync(final @NotNull String id) {
+    // Note: This is not atomic. A failure between find and delete could leave the file.
     final T aggregateRoot = this.findSync(id);
     if (aggregateRoot != null) {
       this.deleteSync(id);
@@ -195,10 +216,14 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
     return this.internalFind(this.resolveChild(id));
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @implNote This method reuses the internal iterator logic. It is synchronous and blocking.
+   */
   @Override
   public @NotNull <C extends Collection<@NotNull T>> C findAllSync(final @NotNull Consumer<T> postLoadAction, final @NotNull IntFunction<C> factory) {
     final C foundAggregates = factory.apply(1);
-    // Reuse the internal iterator logic or directory stream
     this.forEach(aggregateRoot -> {
       postLoadAction.accept(aggregateRoot);
       foundAggregates.add(aggregateRoot);
@@ -209,12 +234,12 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote Uses {@link Files#newDirectoryStream(Path)} to list files without loading their content.
+   * @implNote Uses {@link Files#newDirectoryStream(Path)} to list files efficiently without reading their content.
    */
   @Override
   public @NotNull <C extends Collection<@NotNull String>> C findIdsSync(final @NotNull IntFunction<C> factory) {
     try (final DirectoryStream<Path> directoryStream = Files.newDirectoryStream(this.folderPath)) {
-      final C foundIds = factory.apply(1); // Initial size hint
+      final C foundIds = factory.apply(1); // Starting with small size hint
       directoryStream.forEach(path -> foundIds.add(this.extractId(path)));
       return foundIds;
     } catch (IOException e) {
@@ -225,8 +250,9 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote Writes the aggregate to a file using UTF-8 encoding. If {@code prettyPrint} is enabled,
-   * the JSON will be indented. Creates the file if it does not exist.
+   * @implNote Writes the aggregate to a file using <b>UTF-8</b> encoding.
+   * It is configured to <b>skip null fields</b> during serialization to save space.
+   * If {@code prettyPrint} is enabled, the JSON will be indented.
    */
   @Override
   public @NotNull T saveSync(@NotNull final T aggregateRoot) {
@@ -236,7 +262,7 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
         Files.createFile(aggregateRootPath);
       }
       try (final JsonWriter writer = new JsonWriter(Files.newBufferedWriter(aggregateRootPath, StandardCharsets.UTF_8))) {
-        writer.setSerializeNulls(false);
+        writer.setSerializeNulls(false); // Optimization: Don't write nulls
         if (this.prettyPrint) {
           writer.setIndent("  ");
         }
@@ -252,8 +278,9 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote <b>Warning:</b> This implementation eagerly loads all files into memory to create the Iterator.
-   * It does not stream lazily from the disk.
+   * @implNote <b>Memory Warning:</b> This implementation relies on {@link DirectoryStream} but currently
+   * loads <b>ALL</b> aggregates into an {@link ArrayList} in memory before returning the iterator.
+   * It is <b>NOT lazy</b>. Do not use on folders with massive amounts of data.
    */
   @Override
   public @NotNull Iterator<T> iterator() {
@@ -266,6 +293,11 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @implNote <b>Memory Warning:</b> Similar to {@link #iterator()}, this loads all IDs into memory.
+   */
   @Override
   public @NotNull Iterator<@NotNull String> iteratorIds() {
     try (final DirectoryStream<Path> directoryStream = Files.newDirectoryStream(this.folderPath)) {
