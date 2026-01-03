@@ -1,11 +1,11 @@
-package team.emptyte.storage.aggregate.domain.repository.builder;
+package team.emptyte.storage.domain.repository.builder;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import team.emptyte.storage.aggregate.domain.AggregateRoot;
-import team.emptyte.storage.aggregate.domain.repository.AggregateRootRepository;
-import team.emptyte.storage.aggregate.domain.repository.AsyncAggregateRootRepository;
-import team.emptyte.storage.aggregate.domain.repository.WithFallbackAggregateRootRepository;
+import team.emptyte.storage.domain.AggregateRoot;
+import team.emptyte.storage.domain.repository.AggregateRootRepository;
+import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
+import team.emptyte.storage.domain.repository.WithFallbackAggregateRootRepository;
 
 import java.util.concurrent.Executor;
 

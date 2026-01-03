@@ -1,7 +1,7 @@
 /**
  * <b>Core definitions and Domain Contracts for the Storage Library.</b>
  * <p>
- * This module ("common") serves as the foundation of the library, establishing the
+ * This module ("api") serves as the foundation of the library, establishing the
  * <b>Domain-Driven Design (DDD)</b> building blocks required to persist data.
  * </p>
  *

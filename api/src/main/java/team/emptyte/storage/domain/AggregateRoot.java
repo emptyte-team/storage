@@ -1,4 +1,4 @@
-package team.emptyte.storage.aggregate.domain;
+package team.emptyte.storage.domain;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,13 +1,13 @@
-package team.emptyte.storage.aggregate.infrastructure.gson;
+package team.emptyte.storage.infrastructure.gson;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import team.emptyte.storage.aggregate.domain.AggregateRoot;
-import team.emptyte.storage.aggregate.domain.repository.AsyncAggregateRootRepository;
-import team.emptyte.storage.aggregate.domain.repository.builder.AbstractAggregateRootRepositoryBuilder;
-import team.emptyte.storage.aggregate.infrastructure.codec.AggregateRootDeserializer;
-import team.emptyte.storage.aggregate.infrastructure.codec.AggregateRootSerializer;
+import team.emptyte.storage.domain.AggregateRoot;
+import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
+import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepositoryBuilder;
+import team.emptyte.storage.infrastructure.codec.AggregateRootDeserializer;
+import team.emptyte.storage.infrastructure.codec.AggregateRootSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;

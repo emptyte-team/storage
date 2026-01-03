@@ -17,7 +17,7 @@ pluginManagement {
 rootProject.name = "storage"
 
 sequenceOf(
-  "common",
+  "api",
   "codec",
   "gson-dist"
 ).forEach {

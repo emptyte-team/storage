@@ -1,4 +1,4 @@
-package team.emptyte.storage.aggregate.domain.repository;
+package team.emptyte.storage.domain.repository;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -10,7 +10,7 @@ import java.util.function.IntFunction;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import team.emptyte.storage.aggregate.domain.AggregateRoot;
+import team.emptyte.storage.domain.AggregateRoot;
 
 /**
  * A hybrid repository implementation that orchestrates data flow between two distinct storage sources.

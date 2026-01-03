@@ -1,9 +1,9 @@
-package team.emptyte.storage.aggregate.domain.repository;
+package team.emptyte.storage.domain.repository;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import team.emptyte.storage.aggregate.domain.AggregateRoot;
+import team.emptyte.storage.domain.AggregateRoot;
 
 import java.util.ArrayList;
 import java.util.Collection;

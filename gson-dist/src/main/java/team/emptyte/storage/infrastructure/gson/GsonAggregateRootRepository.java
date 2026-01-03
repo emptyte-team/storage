@@ -1,4 +1,4 @@
-package team.emptyte.storage.aggregate.infrastructure.gson;
+package team.emptyte.storage.infrastructure.gson;
 
 import com.google.gson.JsonObject;
 import com.google.gson.internal.bind.TypeAdapters;
@@ -6,10 +6,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import team.emptyte.storage.aggregate.domain.AggregateRoot;
-import team.emptyte.storage.aggregate.domain.repository.AsyncAggregateRootRepository;
-import team.emptyte.storage.aggregate.infrastructure.codec.AggregateRootDeserializer;
-import team.emptyte.storage.aggregate.infrastructure.codec.AggregateRootSerializer;
+import team.emptyte.storage.domain.AggregateRoot;
+import team.emptyte.storage.domain.repository.AggregateRootRepository;import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
+import team.emptyte.storage.infrastructure.codec.AggregateRootDeserializer;
+import team.emptyte.storage.infrastructure.codec.AggregateRootSerializer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +26,7 @@ import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
 /**
- * Implementation of {@link team.emptyte.storage.aggregate.domain.repository.AggregateRootRepository} that persists
+ * Implementation of {@link AggregateRootRepository} that persists
  * aggregates as <b>JSON files</b> using the Google Gson library.
  * <p>
  * This class acts as a <b>File System Adapter</b> in the Hexagonal Architecture.

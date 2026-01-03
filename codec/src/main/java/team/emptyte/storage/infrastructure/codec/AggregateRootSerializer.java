@@ -1,4 +1,4 @@
-package team.emptyte.storage.aggregate.infrastructure.codec;
+package team.emptyte.storage.infrastructure.codec;
 
 import org.jetbrains.annotations.NotNull;
 
