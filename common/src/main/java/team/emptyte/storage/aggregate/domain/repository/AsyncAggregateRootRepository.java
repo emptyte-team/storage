@@ -26,7 +26,7 @@ import java.util.function.IntFunction;
  *
  * @param <T> The type of the Aggregate Root.
  * @author team.emptyte
- * @since 0.0.1
+ * @since 0.1.0
  * @see java.util.concurrent.CompletableFuture
  */
 public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> implements AggregateRootRepository<T> {
@@ -34,7 +34,7 @@ public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> impl
   /**
    * The executor service responsible for running the blocking synchronous operations.
    */
-  private final Executor executor;
+  protected final Executor executor;
 
   /**
    * Creates an asynchronous repository using a specific {@link Executor}.
@@ -66,7 +66,7 @@ public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> impl
    *
    * @return The {@link Executor} instance.
    */
-  protected @NotNull Executor executor() {
+  public @NotNull Executor executor() {
     return this.executor;
   }
 
