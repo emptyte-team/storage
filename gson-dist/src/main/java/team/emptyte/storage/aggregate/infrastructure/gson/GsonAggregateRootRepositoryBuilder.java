@@ -71,7 +71,7 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
    * @return This builder instance for chaining.
    */
   @Contract("_ -> this")
-  public @NotNull GsonAggregateRootRepositoryBuilder<T> modelSerializer(
+  public @NotNull GsonAggregateRootRepositoryBuilder<T> aggregateRootSerializer(
     final @NotNull AggregateRootSerializer<T, JsonObject> writer
   ) {
     this.writer = writer;
@@ -85,7 +85,7 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
    * @return This builder instance for chaining.
    */
   @Contract("_ -> this")
-  public @NotNull GsonAggregateRootRepositoryBuilder<T> modelDeserializer(
+  public @NotNull GsonAggregateRootRepositoryBuilder<T> aggregateRootDeserializer(
     final @NotNull AggregateRootDeserializer<T, JsonObject> reader
   ) {
     this.reader = reader;
