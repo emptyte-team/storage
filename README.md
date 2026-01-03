@@ -10,16 +10,12 @@
 
 With **Storage**, you define *what* needs to be saved in your Domain Layer and let this library handle *how* it is saved in the Infrastructure Layer.
 
----
-
 ## 🎯 Why use this library?
 
 * **DDD Friendly:** Keeps your Domain Entities pure and your Repository Interfaces clean.
 * **Infrastructure Agnostic:** Switch between SQL, MongoDB, Flat Files (JSON/YAML), or InMemory storage without changing a single line of business logic.
 * **Decoupled:** Acts as an adapter layer, preventing database dependencies from leaking into your application core.
 * **Simple API:** Provides a fluent and consistent API for standard CRUD operations (Sync and Async).
-
----
 
 ## 📦 Installation
 
@@ -152,7 +148,8 @@ import team.emptyte.storage.infrastructure.gson.GsonAggregateRootRepository;
 import codec.team.emptyte.storage.infrastructure.gson.JsonWriter;
 
 import java.nio.file.Path;
-import java.util.UUID;import java.util.concurrent.Executor;
+import java.util.UUID;
+import java.util.concurrent.Executor;
 
 public class Main {
   static void main(final String[] args) {
@@ -160,7 +157,7 @@ public class Main {
     // Hypothetical example using Gson:
     final Executor executor = Executors.newSingleThreadExecutor();
     final Path folder = Paths.get("data");
-    
+
     final AsyncAggergateRootRespository<UserAggregateRoot> repository = GsonAggregateRootRepository.<UserAggregateRoot>builder()
       .folder(folder)
       .prettyPrinting(true)
