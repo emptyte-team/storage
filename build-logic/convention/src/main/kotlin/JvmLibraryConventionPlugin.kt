@@ -1,6 +1,5 @@
 import com.diffplug.gradle.spotless.FormatExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
-import net.kyori.indra.IndraExtension
 import net.kyori.indra.crossdoc.CrossdocExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -8,22 +7,17 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.attributes
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.named
-import org.gradle.kotlin.dsl.repositories
-import org.gradle.kotlin.dsl.withType
-import java.util.Date
+import org.gradle.kotlin.dsl.*
+import java.util.*
 
 class JvmLibraryConventionPlugin : Plugin<Project> {
   override fun apply(target: Project) {
     with(target) {
-      pluginManager.apply("storage.jvm.publishing")
+      apply(plugin = "storage.jvm.publishing")
 
-      pluginManager.apply("net.kyori.indra")
-      pluginManager.apply("net.kyori.indra.crossdoc")
-      pluginManager.apply("net.kyori.indra.licenser.spotless")
+      apply(plugin = "net.kyori.indra")
+      apply(plugin = "net.kyori.indra.crossdoc")
+      apply(plugin = "net.kyori.indra.licenser.spotless")
 
       extensions.configure<SpotlessExtension> {
         fun FormatExtension.applyCommon() {
