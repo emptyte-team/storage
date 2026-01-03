@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
  * @param <AggregateRootType> The type of the domain aggregate.
  * @param <ReadType>          The type of the target data structure.
  * @author team.emptyte
- * @since 0.0.1
+ * @since 0.1.0
  * @see AggregateRootDeserializer
  */
 @FunctionalInterface

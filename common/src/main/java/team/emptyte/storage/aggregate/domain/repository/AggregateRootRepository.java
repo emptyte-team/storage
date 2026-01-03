@@ -30,7 +30,7 @@ import java.util.function.IntFunction;
  *
  * @param <T> The type of the Aggregate Root this repository manages.
  * @author team.emptyte
- * @since 0.0.1
+ * @since 0.1.0
  */
 public interface AggregateRootRepository<T extends AggregateRoot> extends Iterable<T> {
 

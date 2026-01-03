@@ -19,7 +19,7 @@
  * </p>
  *
  * @author team.emptyte
- * @since 0.0.1
+ * @since 0.1.0
  * @see com.google.gson.Gson
  */
 package team.emptyte.storage;

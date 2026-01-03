@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
  * @param <AggregateRootType> The type of the domain entity to create.
  * @param <ReadType>          The type of the raw data input (e.g., {@code String}, {@code Document}).
  * @author team.emptyte
- * @since 0.0.1
+ * @since 0.1.0
  * @see AggregateRootSerializer
  */
 @FunctionalInterface
