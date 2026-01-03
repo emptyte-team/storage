@@ -8,7 +8,7 @@
  * <h2>Module Contents</h2>
  * <ul>
  * <li><b>Domain Models:</b> Base classes for {@code AggregateRoot} and Entities.</li>
- * <li><b>Repository Contracts:</b> Interfaces defining standard CRUD and query operations (Sync & Async).</li>
+ * <li><b>Repository Contracts:</b> Interfaces defining standard CRUD and query operations (Sync and Async).</li>
  * </ul>
  *
  * <h2>Usage</h2>

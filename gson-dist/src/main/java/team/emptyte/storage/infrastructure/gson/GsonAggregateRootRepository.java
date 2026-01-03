@@ -1,13 +1,31 @@
+/*
+ * This file is part of storage, licensed under the MIT License
+ *
+ * Copyright (c) 2025 Emptyte Team
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package team.emptyte.storage.infrastructure.gson;
 
-import com.google.gson.JsonObject;
-import com.google.gson.internal.bind.TypeAdapters;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import team.emptyte.storage.domain.AggregateRoot;
-import team.emptyte.storage.domain.repository.AggregateRootRepository;import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
+import team.emptyte.storage.domain.repository.AggregateRootRepository;
+import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
 import team.emptyte.storage.infrastructure.codec.AggregateRootDeserializer;
 import team.emptyte.storage.infrastructure.codec.AggregateRootSerializer;
 
@@ -25,6 +43,14 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.google.gson.JsonObject;
+import com.google.gson.internal.bind.TypeAdapters;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 /**
  * Implementation of {@link AggregateRootRepository} that persists
  * aggregates as <b>JSON files</b> using the Google Gson library.
@@ -32,7 +58,7 @@ import java.util.stream.Stream;
  * This class acts as a <b>File System Adapter</b> in the Hexagonal Architecture.
  * Each aggregate is stored as a separate file named {@code {id}.json} within the configured {@code folderPath}.
  * </p>
- * <h3>Performance & Limitations:</h3>
+ * <h2>Performance &amp; Limitations:</h2>
  * <ul>
  * <li><b>I/O Bound:</b> All operations involve disk access. Performance depends on the underlying disk speed (SSD vs HDD).</li>
  * <li><b>Scalability:</b> Operations like {@code findAll} or {@code iterator} require scanning the directory.
