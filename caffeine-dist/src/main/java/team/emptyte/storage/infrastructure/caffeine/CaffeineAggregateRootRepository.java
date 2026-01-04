@@ -23,6 +23,7 @@
  */
 package team.emptyte.storage.infrastructure.caffeine;
 
+import org.jetbrains.annotations.Contract;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AggregateRootRepository;
 
@@ -71,10 +72,15 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> implements
    *
    * @param cache The underlying Caffeine cache instance where aggregates are stored.
    */
-  public CaffeineAggregateRootRepository(
+  protected CaffeineAggregateRootRepository(
     final @NotNull Cache<String, T> cache
   ) {
     this.cache = cache;
+  }
+
+  @Contract(value = "_ -> new")
+  public static <T extends AggregateRoot> @NotNull CaffeineAggregateRootRepository<T> create(final @NotNull Cache<String, T> cache) {
+    return new CaffeineAggregateRootRepository<>(cache);
   }
 
   /**
@@ -98,7 +104,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> implements
    */
   @Override
   public boolean deleteSync(final @NotNull String id) {
-    return this.cache.asMap().remove(id) != null;
+    return this.deleteAndRetrieveSync(id) != null;
   }
 
   /**
