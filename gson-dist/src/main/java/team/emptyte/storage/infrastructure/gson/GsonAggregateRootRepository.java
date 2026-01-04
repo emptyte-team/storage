@@ -23,11 +23,11 @@
  */
 package team.emptyte.storage.infrastructure.gson;
 
+import team.emptyte.storage.codec.Deserializer;
+import team.emptyte.storage.codec.Serializer;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AggregateRootRepository;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
-import team.emptyte.storage.codec.Deserializer;
-import team.emptyte.storage.codec.Serializer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

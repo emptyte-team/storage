@@ -23,8 +23,8 @@
  */
 package team.emptyte.storage.infrastructure.gson.codec;
 
-import team.emptyte.storage.codec.Serializer;
 import team.emptyte.storage.codec.DataWriter;
+import team.emptyte.storage.codec.Serializer;
 
 import java.util.Collection;
 import java.util.Map;

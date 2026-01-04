@@ -24,6 +24,7 @@
 package team.emptyte.storage.infrastructure.gson.codec;
 
 import team.emptyte.storage.codec.DataReader;
+import team.emptyte.storage.codec.Deserializer;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,7 +38,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import team.emptyte.storage.codec.Deserializer;
 
 @SuppressWarnings("unused")
 public class JsonDataReader implements DataReader<JsonObject> {
