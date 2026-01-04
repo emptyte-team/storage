@@ -23,10 +23,6 @@
  */
 package team.emptyte.storage.infrastructure.caffeine;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalListener;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
 import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepositoryBuilder;
@@ -34,6 +30,12 @@ import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepos
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 
 /**
  * A builder for creating instances of {@link CaffeineAggregateRootRepository}.

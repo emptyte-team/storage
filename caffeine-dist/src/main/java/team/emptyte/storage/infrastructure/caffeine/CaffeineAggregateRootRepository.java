@@ -23,12 +23,6 @@
  */
 package team.emptyte.storage.infrastructure.caffeine;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalListener;
-import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
 
@@ -37,6 +31,15 @@ import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
+
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
+import org.jetbrains.annotations.NotNull;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 
 /**
  * An implementation of {@link AsyncAggregateRootRepository} that stores aggregates in memory
@@ -47,11 +50,11 @@ import java.util.function.IntFunction;
  * {@link RemovalListener} is configured to persist data upon eviction, or this repository
  * is used as a caching layer in front of a persistent repository.
  * <p>
- * Key features of this implementation:
+ * Key features depend on the injected {@link Cache} configuration, but typically include:
  * <ul>
  * <li><b>In-Memory:</b> Extremely fast read/write operations.</li>
- * <li><b>Eviction Policies:</b> Supports size-based and time-based eviction.</li>
- * <li><b>Memory Safety:</b> Optional support for {@code softValues} to allow garbage collection of entries when memory is low.</li>
+ * <li><b>Eviction Policies:</b> Support for size-based and time-based eviction.</li>
+ * <li><b>Concurrency:</b> Thread-safe operations suitable for high-throughput environments.</li>
  * </ul>
  *
  * @param <T> The type of the aggregate root stored in this repository.
@@ -62,9 +65,10 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
   private final Cache<String, T> cache;
 
   /**
-   * Constructs a new repository with a specific executor for asynchronous operations.
+   * Constructs a new repository with a specific executor and a pre-configured cache.
    *
-   * @param executor The executor to be used by Caffeine for async tasks (e.g., eviction maintenance).
+   * @param executor The executor to be used for handling asynchronous repository tasks (e.g. {@code saveAsync}).
+   * @param cache    The underlying Caffeine cache instance where aggregates are stored.
    */
   protected CaffeineAggregateRootRepository(
     final @NotNull Executor executor,
@@ -75,14 +79,9 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
   }
 
   /**
-   * Constructs a new repository using the default executor.
+   * Constructs a new repository using the default execution context and a pre-configured cache.
    *
-   * @param maximumSize      The maximum number of entries the cache can hold before evicting the oldest ones.
-   * @param expireAfterWrite The duration after which an entry should be automatically removed after being created or replaced.
-   * @param timeUnit         The unit of time for {@code expireAfterWrite}.
-   * @param recordStats      Whether to enable the recording of cache statistics.
-   * @param useSoftValues    If true, enables soft reference collection for values.
-   * @param removalListener  An optional listener to be notified when an entry is removed.
+   * @param cache The underlying Caffeine cache instance where aggregates are stored.
    */
   protected CaffeineAggregateRootRepository(
     final @NotNull Cache<String, T> cache
@@ -212,6 +211,12 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
     return aggregateRoot;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @implNote Returns a weakly consistent iterator over the elements in the cache.
+   * Updates to the cache map while iterating may or may not be reflected in the iterator.
+   */
   @Override
   public @NotNull Iterator<T> iterator() {
     return this.cache.asMap()
@@ -219,6 +224,11 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
       .iterator();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @implNote Returns a weakly consistent iterator over the keys in the cache.
+   */
   @Override
   public @NotNull Iterator<@NotNull String> iteratorIds() {
     return this.cache.asMap()
