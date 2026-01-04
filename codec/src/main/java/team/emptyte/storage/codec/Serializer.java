@@ -21,44 +21,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package team.emptyte.storage.infrastructure.codec;
+package team.emptyte.storage.codec;
 
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Functional interface responsible for transforming a domain <b>Aggregate Root</b> into a
- * data format suitable for storage.
+ * Functional interface responsible for <b>converting</b> an in-memory object into a
+ * raw data format suitable for storage or transmission.
  * <p>
- * In the context of the Hexagonal Architecture (Ports and Adapters), this interface acts as a
- * <b>Data Mapper</b> component. It prevents the domain entities from knowing about the
- * underlying persistence details (like JSON structures, SQL statements, or Byte arrays).
+ * This component acts as a generic translator that turns rich Java objects (POJOs, Records,
+ * DTOs, etc.) into a lower-level representation (like a JSON string, a Map, a Byte array,
+ * or a BSON document).
  * </p>
  * <p>
  * <strong>Generic Types:</strong>
  * <ul>
- * <li>{@code AggregateRootType}: The high-level Domain Entity to be serialized.</li>
- * <li>{@code ReadType}: The low-level data format (e.g., {@code String}, {@code Document}, {@code byte[]})
- * that the storage adapter understands.</li>
+ * <li>{@code Type}: The type of the object to be serialized.</li>
+ * <li>{@code ReadType}: The target data format (e.g., {@code String}, {@code Document}, {@code byte[]})
+ * that represents the serialized object.</li>
  * </ul>
  *
- * @param <AggregateRootType> The type of the domain aggregate.
- * @param <ReadType>          The type of the target data structure.
+ * @param <Type>     The type of the object to serialize.
+ * @param <ReadType> The type of the resulting data structure.
  * @author team.emptyte
+ * @see Serializer
  * @since 0.1.0
- * @see AggregateRootDeserializer
  */
 @FunctionalInterface
-public interface AggregateRootSerializer<AggregateRootType, ReadType> {
+public interface Serializer<Type, ReadType> {
 
   /**
-   * Converts the provided Aggregate Root into a low-level data structure.
+   * Converts the provided object instance into a raw data structure.
    * <p>
    * This method should be a <b>pure function</b>: it must generate the output based solely
-   * on the input, without modifying the state of the {@code aggregateRoot} or causing side effects.
+   * on the input object, without modifying the state of the {@code input} or causing side effects.
    * </p>
    *
-   * @param aggregateRoot The domain entity to serialize. Must not be {@code null}.
-   * @return The data representation of the entity (e.g., a JSON String or Map).
+   * @param input The object instance to serialize. Must not be {@code null}.
+   * @return The serialized representation of the object (e.g., a JSON String or Map).
    */
-  @NotNull ReadType serialize(final @NotNull AggregateRootType aggregateRoot);
+  @NotNull ReadType serialize(final @NotNull Type input);
 }

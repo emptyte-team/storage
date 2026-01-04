@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package team.emptyte.storage.infrastructure.codec;
+package team.emptyte.storage.codec;
 
 import java.util.Collection;
 import java.util.Date;
@@ -32,7 +32,7 @@ import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface AggregateRootReader<ReadType> {
+public interface DataReader<ReadType> {
   @NotNull ReadType raw();
 
   @Nullable ReadType readThis(final @NotNull String field);
@@ -123,18 +123,18 @@ public interface AggregateRootReader<ReadType> {
 
   <T> @Nullable T readObject(
     final @NotNull String field,
-    final @NotNull AggregateRootDeserializer<T, ReadType> aggregateRootDeserializer
+    final @NotNull Deserializer<T, ReadType> deserializer
   );
 
   <K, V> @Nullable Map<K, V> readMap(
     final @NotNull String field,
     final @NotNull Function<V, K> keyParser,
-    final @NotNull AggregateRootDeserializer<V, ReadType> aggregateRootDeserializer
+    final @NotNull Deserializer<V, ReadType> deserializer
   );
 
   <T, C extends Collection<T>> @Nullable C readCollection(
     final @NotNull String field,
     final @NotNull Function<Integer, C> collectionFactory,
-    final @NotNull AggregateRootDeserializer<T, ReadType> aggregateRootDeserializer
+    final @NotNull Deserializer<T, ReadType> deserializer
   );
 }

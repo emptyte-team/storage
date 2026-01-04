@@ -20,4 +20,4 @@
  * @author team.emptyte
  * @since 0.1.0
  */
-package team.emptyte.storage.infrastructure.codec;
+package team.emptyte.storage.codec;

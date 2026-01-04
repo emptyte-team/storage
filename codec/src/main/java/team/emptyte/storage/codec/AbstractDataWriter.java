@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package team.emptyte.storage.infrastructure.codec;
+package team.emptyte.storage.codec;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,16 +31,16 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractAggregateRootWriter<WriteType> implements AggregateRootWriter<WriteType> {
+public abstract class AbstractDataWriter<WriteType> implements DataWriter<WriteType> {
   @Override
   @Contract("_, _ -> this")
-  public @NotNull AggregateRootWriter<WriteType> writeThis(final @NotNull String key, final @Nullable WriteType value) {
+  public @NotNull DataWriter<WriteType> writeThis(final @NotNull String key, final @Nullable WriteType value) {
     return this.writeObject(key, value);
   }
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull AggregateRootWriter<WriteType> writeUuid(final @NotNull String field, final @Nullable UUID uuid) {
+  public @NotNull DataWriter<WriteType> writeUuid(final @NotNull String field, final @Nullable UUID uuid) {
     if (uuid == null) {
       return this.writeString(field, null);
     }
@@ -49,38 +49,38 @@ public abstract class AbstractAggregateRootWriter<WriteType> implements Aggregat
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull AggregateRootWriter<WriteType> writeString(final @NotNull String field, final @Nullable String value) {
+  public @NotNull DataWriter<WriteType> writeString(final @NotNull String field, final @Nullable String value) {
     return this.writeObject(field, value);
   }
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull AggregateRootWriter<WriteType> writeNumber(final @NotNull String field, final @Nullable Number value) {
+  public @NotNull DataWriter<WriteType> writeNumber(final @NotNull String field, final @Nullable Number value) {
     return this.writeObject(field, value);
   }
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull AggregateRootWriter<WriteType> writeBoolean(final @NotNull String field, final @Nullable Boolean value) {
+  public @NotNull DataWriter<WriteType> writeBoolean(final @NotNull String field, final @Nullable Boolean value) {
     return this.writeObject(field, value);
   }
 
   @Override
   @Contract("_, _, _ -> this")
-  public <T> @NotNull AggregateRootWriter<WriteType> writeObject(
+  public <T> @NotNull DataWriter<WriteType> writeObject(
     final @NotNull String field,
     final @Nullable T child,
-    final @NotNull AggregateRootSerializer<T, WriteType> aggregateRootSerializer
+    final @NotNull Serializer<T, WriteType> serializer
   ) {
     if (child == null) {
       return this.writeObject(field, null);
     }
-    return this.writeObject(field, aggregateRootSerializer.serialize(child));
+    return this.writeObject(field, serializer.serialize(child));
   }
 
   @Override
   @Contract("_, _ -> this")
-  public <T> @NotNull AggregateRootWriter<WriteType> writeRawCollection(
+  public <T> @NotNull DataWriter<WriteType> writeRawCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children
   ) {
@@ -89,22 +89,22 @@ public abstract class AbstractAggregateRootWriter<WriteType> implements Aggregat
 
   @Override
   @Contract("_, _, _ -> this")
-  public <T> @NotNull AggregateRootWriter<WriteType> writeCollection(
+  public <T> @NotNull DataWriter<WriteType> writeCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children,
-    final @NotNull AggregateRootSerializer<T, WriteType> aggregateRootSerializer
+    final @NotNull Serializer<T, WriteType> serializer
   ) {
     if (children == null) {
       return this.writeObject(field, null);
     }
     final var documents = new ArrayList<WriteType>(children.size());
     for (final var child : children) {
-      documents.add(aggregateRootSerializer.serialize(child));
+      documents.add(serializer.serialize(child));
     }
     return this.writeObject(field, documents);
   }
 
-  protected abstract @NotNull AggregateRootWriter<WriteType> writeObject(
+  protected abstract @NotNull DataWriter<WriteType> writeObject(
     final @NotNull String field,
     final @Nullable Object value
   );

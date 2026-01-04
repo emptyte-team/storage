@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package team.emptyte.storage.infrastructure.codec;
+package team.emptyte.storage.codec;
 
 import java.util.Collection;
 import java.util.Date;
@@ -33,24 +33,24 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public interface AggregateRootWriter<WriteType> {
+public interface DataWriter<WriteType> {
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeThis(final @NotNull String key, final @Nullable WriteType value);
+  @NotNull DataWriter<WriteType> writeThis(final @NotNull String key, final @Nullable WriteType value);
 
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeDetailedUuid(final @NotNull String key, final @Nullable UUID uuid);
+  @NotNull DataWriter<WriteType> writeDetailedUuid(final @NotNull String key, final @Nullable UUID uuid);
 
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeDetailedUuids(
+  @NotNull DataWriter<WriteType> writeDetailedUuids(
     final @NotNull String key,
     final @Nullable Collection<@NotNull UUID> uuids
   );
 
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeUuid(final @NotNull String field, final @Nullable UUID uuid);
+  @NotNull DataWriter<WriteType> writeUuid(final @NotNull String field, final @Nullable UUID uuid);
 
   @Contract("_, _ -> this")
-  default @NotNull AggregateRootWriter<WriteType> writeDate(final @NotNull String field, final @Nullable Date date) {
+  default @NotNull DataWriter<WriteType> writeDate(final @NotNull String field, final @Nullable Date date) {
     if (date == null) {
       return this.writeNumber(field, null);
     }
@@ -58,44 +58,44 @@ public interface AggregateRootWriter<WriteType> {
   }
 
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeString(final @NotNull String field, final @Nullable String value);
+  @NotNull DataWriter<WriteType> writeString(final @NotNull String field, final @Nullable String value);
 
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeNumber(final @NotNull String field, final @Nullable Number value);
+  @NotNull DataWriter<WriteType> writeNumber(final @NotNull String field, final @Nullable Number value);
 
   @Contract("_, _ -> this")
-  @NotNull AggregateRootWriter<WriteType> writeBoolean(final @NotNull String field, final @Nullable Boolean value);
+  @NotNull DataWriter<WriteType> writeBoolean(final @NotNull String field, final @Nullable Boolean value);
 
   @Contract("_, _, _ -> this")
-  <T> @NotNull AggregateRootWriter<WriteType> writeObject(
+  <T> @NotNull DataWriter<WriteType> writeObject(
     final @NotNull String field,
     final @Nullable T child,
-    final @NotNull AggregateRootSerializer<T, WriteType> aggregateRootSerializer
+    final @NotNull Serializer<T, WriteType> serializer
   );
 
   @Contract("_, _ -> this")
-  @NotNull <T> AggregateRootWriter<WriteType> writeRawCollection(
+  @NotNull <T> DataWriter<WriteType> writeRawCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children
   );
 
   @Contract("_, _, _ -> this")
-  @NotNull <T> AggregateRootWriter<WriteType> writeCollection(
+  @NotNull <T> DataWriter<WriteType> writeCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children,
-    final @NotNull AggregateRootSerializer<T, WriteType> aggregateRootSerializer
+    final @NotNull Serializer<T, WriteType> serializer
   );
 
   @Contract("_, _, _ -> this")
-  default <T> @NotNull AggregateRootWriter<WriteType> writeMap(
+  default <T> @NotNull DataWriter<WriteType> writeMap(
     final @NotNull String field,
     final @Nullable Map<?, T> children,
-    final @NotNull AggregateRootSerializer<T, WriteType> aggregateRootSerializer
+    final @NotNull Serializer<T, WriteType> serializer
   ) {
     if (children == null) {
-      return this.writeCollection(field, null, aggregateRootSerializer);
+      return this.writeCollection(field, null, serializer);
     }
-    return this.writeCollection(field, children.values(), aggregateRootSerializer);
+    return this.writeCollection(field, children.values(), serializer);
   }
 
   @NotNull WriteType current();
