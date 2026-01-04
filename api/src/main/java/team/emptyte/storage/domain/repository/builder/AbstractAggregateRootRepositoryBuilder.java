@@ -49,12 +49,12 @@ import org.jetbrains.annotations.NotNull;
  */
 @SuppressWarnings("unused")
 public abstract class AbstractAggregateRootRepositoryBuilder<T extends AggregateRoot> {
-
   /**
    * Constructs the concrete implementation of the <b>Main Repository</b> (Source of Truth).
    * <p>
    * Subclasses must implement this method to instantiate their specific storage engine
-   * (e.g., File System, Database, Network).
+   * (e.g., File System, Database, Network) using the provided {@link Executor} for
+   * asynchronous operations.
    *
    * @param executor The executor to be used for asynchronous operations.
    * @return A new instance of the specific repository.
