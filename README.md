@@ -13,13 +13,13 @@ With **Storage**, you define *what* needs to be saved in your Domain Layer and l
 ## 🎯 Why use this library?
 
 * **DDD Friendly:** Keeps your Domain Entities pure and your Repository Interfaces clean.
-* **Infrastructure Agnostic:** Switch between SQL, MongoDB, Flat Files (JSON/YAML), or InMemory storage without changing a single line of business logic.
+* **Infrastructure Agnostic:** Switch between Flat Files (JSON/YAML) or InMemory (Map/Caffeine) storage without changing a single line of business logic.
 * **Decoupled:** Acts as an adapter layer, preventing database dependencies from leaking into your application core.
 * **Simple API:** Provides a fluent and consistent API for standard CRUD operations (Sync and Async).
 
 ## 📦 Installation
 
-Currently, this library is in development. To use it, you must select the **distribution module** that fits your needs (e.g., Gson).
+Currently, this library is in development. To use it, you must select the **distribution module** that fits your needs (e.g., Gson, Caffeine).
 
 ### 1. Clone and Install (Local Mode)
 
@@ -56,7 +56,7 @@ dependencies {
 
   implementation("team.emptyte:storage-gson-dist:VERSION")
   // or
-  implementation("team.emptyte:storage-yaml-dist:VERSION")
+  implementation("team.emptyte:storage-caffeine-dist:VERSION")
 }
 ```
 
@@ -161,7 +161,7 @@ public class Main {
     final AsyncAggergateRootRespository<UserAggregateRoot> repository = GsonAggregateRootRepository.<UserAggregateRoot>builder()
       .folder(folder)
       .prettyPrinting(true)
-      .aggregateRootSerializer(new AggregateRootSerializer<UserAggregateRoot, JsonObject>() {
+      .serializer(new AggregateRootSerializer<UserAggregateRoot, JsonObject>() {
         @Override
         public @NotNull JsonObject serialize(final @NotNull UserAggregateRoot aggregateRoot) {
           return JsonWriter.create()
@@ -170,7 +170,7 @@ public class Main {
             .end();
         }
       })
-      .aggregateRootDeserializer(new AggregateRootDeserializer<UserAggregateRoot, JsonObject>() {
+      .deserializer(new AggregateRootDeserializer<UserAggregateRoot, JsonObject>() {
         @Override
         public @NotNull UserAggregateRoot deserialize(final @NotNull JsonObject serialized) {
           final JsonReader reader = JsonReader.create(serialized);
