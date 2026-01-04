@@ -6,7 +6,9 @@ indra = "4.0.0"
 
 [libraries]
 jetbrains-annotations = "org.jetbrains:annotations:26.0.2-1"
+
 gson = "com.google.code.gson:gson:2.13.2"
+caffeine = "com.github.ben-manes.caffeine:caffeine:3.2.3"
 
 build-indra = { module = "net.kyori:indra-common", version.ref = "indra" }
 build-indra-crossdoc = { module = "net.kyori:indra-crossdoc", version.ref = "indra" }
