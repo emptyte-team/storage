@@ -32,6 +32,7 @@ import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepos
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import org.jetbrains.annotations.Contract;
@@ -118,26 +119,43 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
   }
 
   /**
-   * Builds the final {@link GsonAggregateRootRepository}.
+   * Ensures that the storage directory exists.
    * <p>
-   * <b>Side Effect:</b> This method checks if the configured {@code folderPath} exists.
-   * If it does not, it attempts to create the directory (including any necessary parent directories).
+   * If the directory does not exist, it attempts to create it (including any necessary parent directories).
+   *
+   * @param path The path to check and create.
+   * @throws RuntimeException If an I/O error occurs while creating the directory.
+   */
+  private void ensureDirectoryExists(final @NotNull Path path) {
+    if (Files.notExists(path)) {
+      try {
+        Files.createDirectories(path);
+      } catch (IOException e) {
+        // Fail fast: We cannot proceed if we can't write to the disk.
+        throw new RuntimeException("Failed to initialize storage directory at: " + path, e);
+      }
+    }
+  }
+
+  /**
+   * Builds the final {@link GsonAggregateRootRepository} with the specified executor.
+   * <p>
+   * This method validates the configuration and attempts to initialize the storage directory
+   * on the file system.
    *
    * @param executor The executor to use for async operations in the repository.
    * @return The fully configured repository.
-   * @throws RuntimeException If the directory cannot be created.
+   * @throws NullPointerException If any required configuration is missing.
+   * @throws RuntimeException     If the storage directory cannot be created.
    */
   @Override
   @Contract("_ -> new")
   public @NotNull AsyncAggregateRootRepository<T> build(final @NotNull Executor executor) {
-    // Infrastructure initialization logic
-    if (Files.notExists(this.folderPath)) {
-      try {
-        Files.createDirectories(this.folderPath);
-      } catch (final IOException e) {
-        throw new RuntimeException("Could not create storage directory: " + this.folderPath, e);
-      }
-    }
+    Objects.requireNonNull(this.folderPath, "Folder path must not be null");
+    Objects.requireNonNull(this.writer, "Serializer must not be null");
+    Objects.requireNonNull(this.reader, "Deserializer must not be null");
+
+    this.ensureDirectoryExists(this.folderPath);
 
     return new GsonAggregateRootRepository<>(
       executor,
