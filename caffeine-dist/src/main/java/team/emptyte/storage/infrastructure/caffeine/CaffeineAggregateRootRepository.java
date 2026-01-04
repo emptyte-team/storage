@@ -24,11 +24,10 @@
 package team.emptyte.storage.infrastructure.caffeine;
 
 import team.emptyte.storage.domain.AggregateRoot;
-import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
+import team.emptyte.storage.domain.repository.AggregateRootRepository;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
@@ -42,7 +41,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalListener;
 
 /**
- * An implementation of {@link AsyncAggregateRootRepository} that stores aggregates in memory
+ * An implementation of {@link AggregateRootRepository} that stores aggregates in memory
  * using a Caffeine {@link Cache}.
  * <p>
  * This repository acts as a high-performance, volatile storage system. Data stored here
@@ -52,8 +51,8 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
  * <p>
  * Key features depend on the injected {@link Cache} configuration, but typically include:
  * <ul>
- * <li><b>In-Memory:</b> Extremely fast read/write operations.</li>
- * <li><b>Eviction Policies:</b> Support for size-based and time-based eviction.</li>
+ * <li><b>In-Memory:</b> Extremely fast read/write operations (microsecond latency).</li>
+ * <li><b>Eviction Policies:</b> Support for size-based, time-based, or reference-based eviction.</li>
  * <li><b>Concurrency:</b> Thread-safe operations suitable for high-throughput environments.</li>
  * </ul>
  *
@@ -61,51 +60,29 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
  * @see Caffeine
  * @see Cache
  */
-public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends AsyncAggregateRootRepository<T> {
+public class CaffeineAggregateRootRepository<T extends AggregateRoot> implements AggregateRootRepository<T> {
   private final Cache<String, T> cache;
 
   /**
-   * Constructs a new repository with a specific executor and a pre-configured cache.
-   *
-   * @param executor The executor to be used for handling asynchronous repository tasks (e.g. {@code saveAsync}).
-   * @param cache    The underlying Caffeine cache instance where aggregates are stored.
-   */
-  protected CaffeineAggregateRootRepository(
-    final @NotNull Executor executor,
-    final @NotNull Cache<String, T> cache
-  ) {
-    super(executor);
-    this.cache = cache;
-  }
-
-  /**
-   * Constructs a new repository using the default execution context and a pre-configured cache.
+   * Constructs a new repository backed by the provided Caffeine cache instance.
+   * <p>
+   * The behavior of this repository (expiration, size limits, stats recording) is entirely
+   * determined by the configuration of the injected {@code cache}.
    *
    * @param cache The underlying Caffeine cache instance where aggregates are stored.
    */
-  protected CaffeineAggregateRootRepository(
+  public CaffeineAggregateRootRepository(
     final @NotNull Cache<String, T> cache
   ) {
-    super();
     this.cache = cache;
-  }
-
-  /**
-   * Creates a builder to configure and instantiate a {@link CaffeineAggregateRootRepository}.
-   *
-   * @param <T> The type of aggregate root.
-   * @return A new builder instance.
-   */
-  public static <T extends AggregateRoot> @NotNull CaffeineAggregateRootRepositoryBuilder<T> builder() {
-    return new CaffeineAggregateRootRepositoryBuilder<>();
   }
 
   /**
    * Exposes the underlying Caffeine {@link Cache} instance.
    * <p>
    * This is useful for advanced operations not covered by the repository interface,
-   * such as retrieving cache statistics (`cache.stats()`), explicit invalidation,
-   * or accessing the map view directly.
+   * such as retrieving cache statistics via {@code cache.stats()}, explicit invalidation,
+   * or accessing the map view directly for atomic computations.
    *
    * @return The underlying Caffeine cache.
    */
@@ -116,7 +93,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
   /**
    * {@inheritDoc}
    *
-   * @implNote This operation is performed directly on the underlying cache map.
+   * @implNote This operation delegates to the underlying cache map's remove method.
    * It returns {@code true} if the entry existed and was removed, or {@code false} otherwise.
    */
   @Override
@@ -128,6 +105,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
    * {@inheritDoc}
    *
    * @implNote This clears all entries from the internal cache using {@link Cache#invalidateAll()}.
+   *
    */
   @Override
   public void deleteAllSync() {
@@ -149,8 +127,8 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
    * {@inheritDoc}
    *
    * @implNote Checks for the presence of the key in the cache map (O(1) operation).
-   * Note that if the entry has expired but hasn't been evicted yet, this might still return false
-   * depending on Caffeine's cleanup cycle.
+   * Note that if the entry has expired but hasn't been evicted yet by the maintenance cycle,
+   * this might still return false depending on Caffeine's internal state.
    */
   @Override
   public boolean existsSync(final @NotNull String id) {
@@ -161,7 +139,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
    * {@inheritDoc}
    *
    * @implNote Uses {@link Cache#getIfPresent(Object)} to retrieve the value.
-   * Does not trigger a load or computation if the value is missing.
+   * Does not trigger a load or computation if the value is missing; strictly returns what is currently in memory.
    */
   @Override
   public @Nullable T findSync(final @NotNull String id) {
@@ -172,8 +150,9 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
    * {@inheritDoc}
    *
    * @implNote Iterates over the {@code values()} view of the underlying concurrent map.
-   * This operation is thread-safe but weakly consistent; it reflects the state of the cache
-   * at the time of iteration.
+   * <p>
+   * <b>Consistency Note:</b> The returned collection is a weakly consistent snapshot. Modifications
+   * to the cache that occur during iteration may or may not be reflected in the result.
    */
   @Override
   public @NonNull <C extends Collection<@NotNull T>> C findAllSync(final @NotNull Consumer<T> postLoadAction, final @NotNull IntFunction<C> factory) {
@@ -190,6 +169,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
    * {@inheritDoc}
    *
    * @implNote Returns a snapshot of the keys currently in the cache.
+   * Like {@link #findAllSync}, this view is weakly consistent.
    */
   @Override
   public @NonNull <C extends Collection<@NotNull String>> C findIdsSync(final @NotNull IntFunction<C> factory) {
@@ -203,7 +183,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> extends As
    * {@inheritDoc}
    *
    * @implNote Inserts or updates the aggregate in the cache using {@link Cache#put(Object, Object)}.
-   * This operation overwrites any previous value associated with the ID.
+   * This operation overwrites any previous value associated with the ID immediately (Last-Write-Wins).
    */
   @Override
   public @NonNull T saveSync(@NonNull final T aggregateRoot) {
