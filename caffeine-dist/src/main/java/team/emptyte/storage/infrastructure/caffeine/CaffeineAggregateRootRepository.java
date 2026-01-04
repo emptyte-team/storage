@@ -23,7 +23,6 @@
  */
 package team.emptyte.storage.infrastructure.caffeine;
 
-import org.jetbrains.annotations.Contract;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AggregateRootRepository;
 
@@ -35,6 +34,7 @@ import java.util.function.IntFunction;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -65,10 +65,7 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> implements
   private final Cache<String, T> cache;
 
   /**
-   * Constructs a new repository backed by the provided Caffeine cache instance.
-   * <p>
-   * The behavior of this repository (expiration, size limits, stats recording) is entirely
-   * determined by the configuration of the injected {@code cache}.
+   * Protected constructor to encourage the use of the static factory method {@link #create(Cache)}.
    *
    * @param cache The underlying Caffeine cache instance where aggregates are stored.
    */
@@ -78,6 +75,13 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> implements
     this.cache = cache;
   }
 
+  /**
+   * Creates a new instance of {@link CaffeineAggregateRootRepository} backed by the provided cache.
+   *
+   * @param cache The configured Caffeine cache instance.
+   * @param <T>   The type of the aggregate root.
+   * @return A new repository instance.
+   */
   @Contract(value = "_ -> new")
   public static <T extends AggregateRoot> @NotNull CaffeineAggregateRootRepository<T> create(final @NotNull Cache<String, T> cache) {
     return new CaffeineAggregateRootRepository<>(cache);
@@ -104,14 +108,13 @@ public class CaffeineAggregateRootRepository<T extends AggregateRoot> implements
    */
   @Override
   public boolean deleteSync(final @NotNull String id) {
-    return this.deleteAndRetrieveSync(id) != null;
+    return this.cache.asMap().remove(id) != null;
   }
 
   /**
    * {@inheritDoc}
    *
    * @implNote This clears all entries from the internal cache using {@link Cache#invalidateAll()}.
-   *
    */
   @Override
   public void deleteAllSync() {
