@@ -23,8 +23,7 @@
  */
 package team.emptyte.storage.infrastructure.gson.codec;
 
-import team.emptyte.storage.infrastructure.codec.AggregateRootDeserializer;
-import team.emptyte.storage.infrastructure.codec.AggregateRootReader;
+import team.emptyte.storage.codec.DataReader;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,10 +37,11 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import team.emptyte.storage.codec.Deserializer;
 
 @SuppressWarnings("unused")
-public class JsonReader implements AggregateRootReader<JsonObject> {
-  public static final Function<JsonObject, JsonReader> FACTORY = JsonReader::create;
+public class JsonDataReader implements DataReader<JsonObject> {
+  public static final Function<JsonObject, JsonDataReader> FACTORY = JsonDataReader::create;
   private static final Map<Class<?>, Function<JsonElement, Object>> READERS = new HashMap<>();
 
   static {
@@ -57,13 +57,13 @@ public class JsonReader implements AggregateRootReader<JsonObject> {
 
   protected final JsonObject jsonObject;
 
-  protected JsonReader(final @NotNull JsonObject jsonObject) {
+  protected JsonDataReader(final @NotNull JsonObject jsonObject) {
     this.jsonObject = jsonObject;
   }
 
   @Contract("_ -> new")
-  public static @NotNull JsonReader create(final @NotNull JsonObject jsonObject) {
-    return new JsonReader(jsonObject);
+  public static @NotNull JsonDataReader create(final @NotNull JsonObject jsonObject) {
+    return new JsonDataReader(jsonObject);
   }
 
   @Override
@@ -126,20 +126,20 @@ public class JsonReader implements AggregateRootReader<JsonObject> {
   @Override
   public <T> @Nullable T readObject(
     final @NotNull String field,
-    final @NotNull AggregateRootDeserializer<T, JsonObject> aggregateRootDeserializer
+    final @NotNull Deserializer<T, JsonObject> deserializer
   ) {
     final JsonElement element = this.jsonObject.get(field);
     if (element == null) {
       return null;
     }
-    return aggregateRootDeserializer.deserialize(element.getAsJsonObject());
+    return deserializer.deserialize(element.getAsJsonObject());
   }
 
   @Override
   public @Nullable <K, V> Map<K, V> readMap(
     final @NotNull String field,
     final @NotNull Function<V, K> keyParser,
-    final @NotNull AggregateRootDeserializer<V, JsonObject> aggregateRootDeserializer
+    final @NotNull Deserializer<V, JsonObject> deserializer
   ) {
     final var element = this.jsonObject.get(field);
     if (element == null) {
@@ -148,7 +148,7 @@ public class JsonReader implements AggregateRootReader<JsonObject> {
     final var array = element.getAsJsonArray();
     final var map = new HashMap<K, V>(array.size());
     for (final var arrayElement : array) {
-      final var value = aggregateRootDeserializer.deserialize(arrayElement.getAsJsonObject());
+      final var value = deserializer.deserialize(arrayElement.getAsJsonObject());
       map.put(keyParser.apply(value), value);
     }
     return map;
@@ -158,7 +158,7 @@ public class JsonReader implements AggregateRootReader<JsonObject> {
   public <T, C extends Collection<T>> @Nullable C readCollection(
     final @NotNull String field,
     final @NotNull Function<Integer, C> collectionFactory,
-    final @NotNull AggregateRootDeserializer<T, JsonObject> aggregateRootDeserializer
+    final @NotNull Deserializer<T, JsonObject> deserializer
   ) {
     final var array = this.jsonObject.getAsJsonArray(field);
     if (array == null) {
@@ -166,7 +166,7 @@ public class JsonReader implements AggregateRootReader<JsonObject> {
     }
     final var objects = collectionFactory.apply(array.size());
     for (final var element : array) {
-      final var object = aggregateRootDeserializer.deserialize(element.getAsJsonObject());
+      final var object = deserializer.deserialize(element.getAsJsonObject());
       objects.add(object);
     }
     return objects;

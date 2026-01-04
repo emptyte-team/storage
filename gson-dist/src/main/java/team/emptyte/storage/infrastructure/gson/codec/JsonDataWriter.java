@@ -23,8 +23,8 @@
  */
 package team.emptyte.storage.infrastructure.gson.codec;
 
-import team.emptyte.storage.infrastructure.codec.AggregateRootSerializer;
-import team.emptyte.storage.infrastructure.codec.AggregateRootWriter;
+import team.emptyte.storage.codec.Serializer;
+import team.emptyte.storage.codec.DataWriter;
 
 import java.util.Collection;
 import java.util.Map;
@@ -40,26 +40,26 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 @SuppressWarnings("unused")
-public class JsonWriter implements AggregateRootWriter<JsonObject> {
+public class JsonDataWriter implements DataWriter<JsonObject> {
   private final JsonObject jsonObject;
 
-  protected JsonWriter(final @NotNull JsonObject jsonObject) {
+  protected JsonDataWriter(final @NotNull JsonObject jsonObject) {
     this.jsonObject = jsonObject;
   }
 
   @Contract(" -> new")
-  public static @NotNull JsonWriter create() {
-    return new JsonWriter(new JsonObject());
+  public static @NotNull JsonDataWriter create() {
+    return new JsonDataWriter(new JsonObject());
   }
 
   @Contract("_ -> new")
-  public static @NotNull JsonWriter create(final @NotNull JsonObject jsonObject) {
-    return new JsonWriter(jsonObject);
+  public static @NotNull JsonDataWriter create(final @NotNull JsonObject jsonObject) {
+    return new JsonDataWriter(jsonObject);
   }
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeDetailedUuid(
+  public @NotNull JsonDataWriter writeDetailedUuid(
     final @NotNull String key,
     final @Nullable UUID uuid
   ) {
@@ -73,7 +73,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeDetailedUuids(
+  public @NotNull JsonDataWriter writeDetailedUuids(
     final @NotNull String key,
     final @Nullable Collection<@NotNull UUID> uuids
   ) {
@@ -104,7 +104,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeThis(
+  public @NotNull JsonDataWriter writeThis(
     final @NotNull String key,
     final @Nullable JsonObject value
   ) {
@@ -114,7 +114,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeUuid(final @NotNull String field, final @Nullable UUID uuid) {
+  public @NotNull JsonDataWriter writeUuid(final @NotNull String field, final @Nullable UUID uuid) {
     if (uuid == null) {
       return this;
     }
@@ -124,7 +124,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeString(
+  public @NotNull JsonDataWriter writeString(
     final @NotNull String field,
     final @Nullable String value
   ) {
@@ -137,7 +137,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeNumber(
+  public @NotNull JsonDataWriter writeNumber(
     final @NotNull String field,
     final @Nullable Number value
   ) {
@@ -150,7 +150,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _ -> this")
-  public @NotNull JsonWriter writeBoolean(
+  public @NotNull JsonDataWriter writeBoolean(
     final @NotNull String field,
     final @Nullable Boolean value
   ) {
@@ -163,21 +163,21 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _, _ -> this")
-  public <T> @NotNull JsonWriter writeObject(
+  public <T> @NotNull JsonDataWriter writeObject(
     final @NotNull String field,
     final @Nullable T child,
-    final @NotNull AggregateRootSerializer<T, JsonObject> aggregateRootSerializer
+    final @NotNull Serializer<T, JsonObject> serializer
   ) {
     if (child == null) {
       return this;
     }
-    this.jsonObject.add(field, aggregateRootSerializer.serialize(child));
+    this.jsonObject.add(field, serializer.serialize(child));
     return this;
   }
 
   @Override
   @Contract("_, _ -> this")
-  public <T> @NotNull JsonWriter writeRawCollection(
+  public <T> @NotNull JsonDataWriter writeRawCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children
   ) {
@@ -197,24 +197,24 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
 
   @Override
   @Contract("_, _, _ -> this")
-  public <T> @NotNull JsonWriter writeCollection(
+  public <T> @NotNull JsonDataWriter writeCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children,
-    final @NotNull AggregateRootSerializer<T, JsonObject> aggregateRootSerializer
+    final @NotNull Serializer<T, JsonObject> serializer
   ) {
     if (children == null) {
       return this;
     }
     final var array = new JsonArray(children.size());
     for (final var child : children) {
-      array.add(aggregateRootSerializer.serialize(child));
+      array.add(serializer.serialize(child));
     }
     this.jsonObject.add(field, array);
     return this;
   }
 
   @Contract("_, _, _ -> this")
-  public <T> @NotNull JsonWriter writePrimitiveCollection(
+  public <T> @NotNull JsonDataWriter writePrimitiveCollection(
     final @NotNull String field,
     final @Nullable Collection<T> children,
     final @NotNull Function<T, JsonElement> writer
@@ -230,7 +230,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
     return this;
   }
 
-  public <T> @NotNull JsonWriter writePrimitiveArray(
+  public <T> @NotNull JsonDataWriter writePrimitiveArray(
     final @NotNull String field,
     final @Nullable T[] children,
     final @NotNull Function<T, JsonElement> writer
@@ -246,7 +246,7 @@ public class JsonWriter implements AggregateRootWriter<JsonObject> {
     return this;
   }
 
-  public <K, V> @NotNull JsonWriter writePrimitiveMap(
+  public <K, V> @NotNull JsonDataWriter writePrimitiveMap(
     final @NotNull String field,
     final @Nullable Map<K, V> map,
     final @NotNull Function<K, String> keyWriter,
