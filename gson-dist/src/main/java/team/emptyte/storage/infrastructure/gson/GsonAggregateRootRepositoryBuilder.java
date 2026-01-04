@@ -23,11 +23,11 @@
  */
 package team.emptyte.storage.infrastructure.gson;
 
+import team.emptyte.storage.codec.Deserializer;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
 import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepositoryBuilder;
-import team.emptyte.storage.infrastructure.codec.AggregateRootDeserializer;
-import team.emptyte.storage.infrastructure.codec.AggregateRootSerializer;
+import team.emptyte.storage.codec.Serializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,8 +54,8 @@ import com.google.gson.JsonObject;
 public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends AbstractAggregateRootRepositoryBuilder<T> {
   private Path folderPath;
   private boolean prettyPrinting;
-  private AggregateRootSerializer<T, JsonObject> writer;
-  private AggregateRootDeserializer<T, JsonObject> reader;
+  private Serializer<T, JsonObject> writer;
+  private Deserializer<T, JsonObject> reader;
 
   /**
    * Package-private constructor to enforce the use of the static factory method
@@ -96,8 +96,8 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
    * @return This builder instance for chaining.
    */
   @Contract("_ -> this")
-  public @NotNull GsonAggregateRootRepositoryBuilder<T> aggregateRootSerializer(
-    final @NotNull AggregateRootSerializer<T, JsonObject> writer
+  public @NotNull GsonAggregateRootRepositoryBuilder<T> serializer(
+    final @NotNull Serializer<T, JsonObject> writer
   ) {
     this.writer = writer;
     return this;
@@ -110,8 +110,8 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
    * @return This builder instance for chaining.
    */
   @Contract("_ -> this")
-  public @NotNull GsonAggregateRootRepositoryBuilder<T> aggregateRootDeserializer(
-    final @NotNull AggregateRootDeserializer<T, JsonObject> reader
+  public @NotNull GsonAggregateRootRepositoryBuilder<T> deserializer(
+    final @NotNull Deserializer<T, JsonObject> reader
   ) {
     this.reader = reader;
     return this;

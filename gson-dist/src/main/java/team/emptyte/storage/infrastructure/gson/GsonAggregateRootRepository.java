@@ -26,8 +26,8 @@ package team.emptyte.storage.infrastructure.gson;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AggregateRootRepository;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
-import team.emptyte.storage.infrastructure.codec.AggregateRootDeserializer;
-import team.emptyte.storage.infrastructure.codec.AggregateRootSerializer;
+import team.emptyte.storage.codec.Deserializer;
+import team.emptyte.storage.codec.Serializer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -73,8 +73,8 @@ import com.google.gson.stream.JsonWriter;
 public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncAggregateRootRepository<T> {
   private final Path folderPath;
   private final boolean prettyPrint;
-  private final AggregateRootSerializer<T, JsonObject> serializer;
-  private final AggregateRootDeserializer<T, JsonObject> deserializer;
+  private final Serializer<T, JsonObject> serializer;
+  private final Deserializer<T, JsonObject> deserializer;
 
   /**
    * Creates a new Gson-based repository with a specific Executor for async operations.
@@ -89,8 +89,8 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
     final @NotNull Executor executor,
     final @NotNull Path folderPath,
     final boolean prettyPrint,
-    final @NotNull AggregateRootSerializer<T, JsonObject> serializer,
-    final @NotNull AggregateRootDeserializer<T, JsonObject> deserializer
+    final @NotNull Serializer<T, JsonObject> serializer,
+    final @NotNull Deserializer<T, JsonObject> deserializer
   ) {
     super(executor);
 
@@ -115,8 +115,8 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   protected GsonAggregateRootRepository(
     final @NotNull Path folderPath,
     final boolean prettyPrint,
-    final @NotNull AggregateRootSerializer<T, JsonObject> serializer,
-    final @NotNull AggregateRootDeserializer<T, JsonObject> deserializer
+    final @NotNull Serializer<T, JsonObject> serializer,
+    final @NotNull Deserializer<T, JsonObject> deserializer
   ) {
     super();
 
