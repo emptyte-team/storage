@@ -145,8 +145,8 @@ This is where you decide which implementation to use (Gson, YAML, etc.) and inje
 
 import repository.team.emptyte.storage.domain.AsyncAggregateRootRepository;
 import team.emptyte.storage.infrastructure.gson.GsonAggregateRootRepository;
-import codec.team.emptyte.storage.infrastructure.gson.JsonWriter;
-
+import codec.team.emptyte.storage.codec.TypeAdapter;
+import com.google.gson.JsonObject;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -161,21 +161,17 @@ public class Main {
     final AsyncAggergateRootRespository<UserAggregateRoot> repository = GsonAggregateRootRepository.<UserAggregateRoot>builder()
       .folder(folder)
       .prettyPrinting(true)
-      .serializer(new AggregateRootSerializer<UserAggregateRoot, JsonObject>() {
-        @Override
-        public @NotNull JsonObject serialize(final @NotNull UserAggregateRoot aggregateRoot) {
-          return JsonWriter.create()
-            .writeString("id", aggregateRoot.id())
-            .writeString("name", aggregateRoot.name())
-            .end();
+      .typeAdapter(new TypeAdapter<UserAggregateRoot, JsonObject>() {
+        public @NotNull JsonObject write(final @NotNull UserAggregateRoot value) {
+          final JsonObject serialized = new JsonObject();
+          serialized.addProperty("id", value.id());
+          serialized.addProperty("name", value.name());
+          return serialized;
         }
-      })
-      .deserializer(new AggregateRootDeserializer<UserAggregateRoot, JsonObject>() {
-        @Override
-        public @NotNull UserAggregateRoot deserialize(final @NotNull JsonObject serialized) {
-          final JsonReader reader = JsonReader.create(serialized);
-          final String id = reader.readString("id");
-          final String name = reader.readString("name");
+
+        public @NotNull UserAggregateRoot read(final @NotNull JsonObject value) {
+          final String id = value.get("id").getAsString();
+          final String name = value.get("name").getAsString();
           return new UserAggregateRoot(id, name);
         }
       })
