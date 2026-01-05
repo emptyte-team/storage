@@ -74,18 +74,6 @@ public abstract class AsyncAggregateRootRepository<T extends AggregateRoot> impl
   }
 
   /**
-   * Creates an asynchronous repository using a default single-thread executor.
-   * <p>
-   * <b>Warning:</b> This constructor creates a new {@link Executors#newSingleThreadExecutor()}
-   * for <i>each</i> instance of the repository. In a production environment with many repositories,
-   * this could lead to excessive thread creation. Use only for testing or simple prototypes.
-   * </p>
-   */
-  protected AsyncAggregateRootRepository() {
-    this(Executors.newSingleThreadExecutor());
-  }
-
-  /**
    * Exposes the underlying executor used by this repository.
    *
    * @return The {@link Executor} instance.
