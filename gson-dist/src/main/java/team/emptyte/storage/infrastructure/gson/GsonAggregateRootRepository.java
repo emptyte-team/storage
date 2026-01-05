@@ -59,7 +59,7 @@ import com.google.gson.stream.JsonWriter;
  * standalone file following the naming convention {@code {id}.json} inside the
  * specified {@code folderPath}.</p>
  *
- * <h3>Technical Considerations:</h3>
+ * <h2>Technical Considerations:</h2>
  * <ul>
  * <li><b>Performance:</b> Being I/O bound, performance is dictated by disk throughput (SSD recommended).</li>
  * <li><b>Concurrency:</b> While this class is stateless, file system operations are not

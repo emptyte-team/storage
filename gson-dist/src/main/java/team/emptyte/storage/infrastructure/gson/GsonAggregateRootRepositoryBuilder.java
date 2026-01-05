@@ -46,7 +46,7 @@ import com.google.gson.JsonObject;
  * parameters and ensures the underlying file system is prepared before the repository
  * starts its operations.</p>
  *
- * <h3>Key Configurations:</h3>
+ * <h2>Key Configurations:</h2>
  * <ul>
  * <li><b>Location:</b> Defines the {@link Path} where the JSON documents will reside.</li>
  * <li><b>Format:</b> Controls whether the output should be human-readable (pretty-printed)
