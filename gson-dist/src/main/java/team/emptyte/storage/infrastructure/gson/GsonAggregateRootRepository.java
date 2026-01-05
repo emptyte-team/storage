@@ -23,8 +23,7 @@
  */
 package team.emptyte.storage.infrastructure.gson;
 
-import team.emptyte.storage.codec.Deserializer;
-import team.emptyte.storage.codec.Serializer;
+import team.emptyte.storage.codec.TypeAdapter;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AggregateRootRepository;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
@@ -52,78 +51,56 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 /**
- * Implementation of {@link AggregateRootRepository} that persists
- * aggregates as <b>JSON files</b> using the Google Gson library.
- * <p>
- * This class acts as a <b>File System Adapter</b> in the Hexagonal Architecture.
- * Each aggregate is stored as a separate file named {@code {id}.json} within the configured {@code folderPath}.
- * </p>
- * <h2>Performance &amp; Limitations:</h2>
+ * An implementation of {@link AggregateRootRepository} that persists domain aggregates
+ * as individual <b>JSON files</b> using the Google Gson library.
+ *
+ * <p>This implementation functions as a <b>File System Adapter</b> within the
+ * Infrastructure layer (Hexagonal Architecture). Each aggregate is stored as a
+ * standalone file following the naming convention {@code {id}.json} inside the
+ * specified {@code folderPath}.</p>
+ *
+ * <h3>Technical Considerations:</h3>
  * <ul>
- * <li><b>I/O Bound:</b> All operations involve disk access. Performance depends on the underlying disk speed (SSD vs HDD).</li>
- * <li><b>Scalability:</b> Operations like {@code findAll} or {@code iterator} require scanning the directory.
- * Performance may degrade significantly if the folder contains thousands of files.</li>
- * <li><b>Atomicity:</b> File writes are generally atomic on modern OSs, but this class does not implement transactional locks across multiple files.</li>
+ * <li><b>Performance:</b> Being I/O bound, performance is dictated by disk throughput (SSD recommended).</li>
+ * <li><b>Concurrency:</b> While this class is stateless, file system operations are not
+ * inherently transactional. External synchronization may be required if multiple
+ * processes access the same directory.</li>
+ * <li><b>Scalability:</b> Operations like {@link #findAllSync} or {@link #iterator()}
+ * perform directory scans. Performance scales linearly $O(n)$ with the number
+ * of files, which may become a bottleneck with tens of thousands of entries.</li>
  * </ul>
  *
- * @param <T> The type of the Aggregate Root.
+ * @param <T> The type of the {@link AggregateRoot} being persisted.
  * @author team.emptyte
  * @since 0.1.0
  */
 public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncAggregateRootRepository<T> {
   private final Path folderPath;
   private final boolean prettyPrint;
-  private final Serializer<T, JsonObject> serializer;
-  private final Deserializer<T, JsonObject> deserializer;
+  private final TypeAdapter<T, JsonObject> typeAdapter;
 
   /**
-   * Creates a new Gson-based repository with a specific Executor for async operations.
+   * Initializes the repository.
+   * <p><b>Note:</b> The provided {@code folderPath} should exist and have
+   * write permissions for the application.</p>
    *
-   * @param executor     The executor to handle background I/O tasks.
-   * @param folderPath   The directory where JSON files will be stored.
-   * @param prettyPrint  If {@code true}, the JSON output will be indented for human readability (increases file size).
-   * @param serializer   The adapter to convert the domain object to a Gson {@link JsonObject}.
-   * @param deserializer The adapter to reconstitute the domain object from a Gson {@link JsonObject}.
+   * @param executor     The task runner for asynchronous operations.
+   * @param folderPath   The root directory for JSON storage.
+   * @param prettyPrint  Whether to indent the output JSON (useful for debugging,
+   * but increases storage footprint).
+   * @param typeAdapter  The bridge used to map domain objects to {@link JsonObject}.
    */
   protected GsonAggregateRootRepository(
     final @NotNull Executor executor,
     final @NotNull Path folderPath,
     final boolean prettyPrint,
-    final @NotNull Serializer<T, JsonObject> serializer,
-    final @NotNull Deserializer<T, JsonObject> deserializer
+    final @NotNull TypeAdapter<T, JsonObject> typeAdapter
   ) {
     super(executor);
 
     this.folderPath = folderPath;
     this.prettyPrint = prettyPrint;
-    this.serializer = serializer;
-    this.deserializer = deserializer;
-  }
-
-  /**
-   * Creates a new Gson-based repository using a default single-thread executor.
-   * <p>
-   * <b>Warning:</b> This relies on the default executor from the parent class.
-   * Ensure this fits your concurrency model.
-   * </p>
-   *
-   * @param folderPath   The directory where JSON files will be stored.
-   * @param prettyPrint  If {@code true}, format JSON with indentation.
-   * @param serializer   The serializer adapter.
-   * @param deserializer The deserializer adapter.
-   */
-  protected GsonAggregateRootRepository(
-    final @NotNull Path folderPath,
-    final boolean prettyPrint,
-    final @NotNull Serializer<T, JsonObject> serializer,
-    final @NotNull Deserializer<T, JsonObject> deserializer
-  ) {
-    super();
-
-    this.folderPath = folderPath;
-    this.prettyPrint = prettyPrint;
-    this.serializer = serializer;
-    this.deserializer = deserializer;
+    this.typeAdapter = typeAdapter;
   }
 
   /**
@@ -180,7 +157,7 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
         jsonObject.add(reader.nextName(), TypeAdapters.JSON_ELEMENT.read(reader));
       }
       reader.endObject();
-      return this.deserializer.deserialize(jsonObject);
+      return this.typeAdapter.read(jsonObject);
     } catch (final IOException e) {
       throw new RuntimeException("Failed to read JSON file: " + file, e);
     }
@@ -237,6 +214,14 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
     return Files.exists(this.resolveChild(id));
   }
 
+  /**
+   * {@inheritDoc}
+   * * @implNote Uses a {@link JsonReader} to stream the file content directly into a
+   * {@link JsonObject}. This approach is more memory-efficient than reading the
+   * entire file into a String before parsing.
+   * @throws RuntimeException wrapping {@link IOException} if the file is corrupted
+   * or inaccessible.
+   */
   @Override
   public @Nullable T findSync(final @NotNull String id) {
     return this.internalFind(this.resolveChild(id));
@@ -276,9 +261,9 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote Writes the aggregate to a file using <b>UTF-8</b> encoding.
-   * It is configured to <b>skip null fields</b> during serialization to save space.
-   * If {@code prettyPrint} is enabled, the JSON will be indented.
+   * @implNote This method ensures the file exists before writing. It utilizes
+   * <b>UTF-8</b> encoding and is configured via {@link JsonWriter#setSerializeNulls(boolean)}
+   * to {@code false} to minimize file size by omitting null fields.
    */
   @Override
   public @NotNull T saveSync(@NotNull final T aggregateRoot) {
@@ -292,7 +277,7 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
         if (this.prettyPrint) {
           writer.setIndent("  ");
         }
-        final JsonObject jsonObject = this.serializer.serialize(aggregateRoot);
+        final JsonObject jsonObject = this.typeAdapter.write(aggregateRoot);
         TypeAdapters.JSON_ELEMENT.write(writer, jsonObject);
         return aggregateRoot;
       }
@@ -304,9 +289,10 @@ public class GsonAggregateRootRepository<T extends AggregateRoot> extends AsyncA
   /**
    * {@inheritDoc}
    *
-   * @implNote <b>Memory Warning:</b> This implementation relies on {@link DirectoryStream} but currently
-   * loads <b>ALL</b> aggregates into an {@link ArrayList} in memory before returning the iterator.
-   * It is <b>NOT lazy</b>. Do not use on folders with massive amounts of data.
+   * @implNote <b>Warning: Non-Lazy Implementation.</b>
+   * This implementation drains the {@link DirectoryStream} into an in-memory
+   * {@link List} before returning the iterator. In environments with a massive
+   * amount of aggregates, this may trigger an {@link OutOfMemoryError}.
    */
   @Override
   public @NotNull Iterator<T> iterator() {

@@ -23,8 +23,7 @@
  */
 package team.emptyte.storage.infrastructure.gson;
 
-import team.emptyte.storage.codec.Deserializer;
-import team.emptyte.storage.codec.Serializer;
+import team.emptyte.storage.codec.TypeAdapter;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
 import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepositoryBuilder;
@@ -32,7 +31,6 @@ import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepos
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import org.jetbrains.annotations.Contract;
@@ -41,35 +39,42 @@ import org.jetbrains.annotations.NotNull;
 import com.google.gson.JsonObject;
 
 /**
- * A builder for creating instances of {@link GsonAggregateRootRepository}.
- * <p>
- * This builder simplifies the configuration of the JSON storage engine, allowing you to specify:
+ * A fluent builder implementation for creating {@link GsonAggregateRootRepository} instances.
+ *
+ * <p>This builder follows the <b>Fluent API</b> pattern, allowing for a descriptive
+ * configuration of the JSON storage engine. It centralizes the validation of required
+ * parameters and ensures the underlying file system is prepared before the repository
+ * starts its operations.</p>
+ *
+ * <h3>Key Configurations:</h3>
  * <ul>
- * <li><b>Storage Location:</b> The folder where JSON files will be kept.</li>
- * <li><b>Formatting:</b> Whether to use pretty printing (indentation) or minified JSON.</li>
- * <li><b>Serialization Logic:</b> How to convert your specific domain objects to/from Gson's {@link JsonObject}.</li>
+ * <li><b>Location:</b> Defines the {@link Path} where the JSON documents will reside.</li>
+ * <li><b>Format:</b> Controls whether the output should be human-readable (pretty-printed)
+ * or optimized for size (minified).</li>
+ * <li><b>Codec:</b> Assigns a {@link TypeAdapter} to handle the domain-to-JSON mapping.</li>
  * </ul>
  *
- * @param <T> The type of AggregateRoot to be built.
+ * @param <T> The type of {@link AggregateRoot} this builder will produce a repository for.
+ * @author team.emptyte
+ * @since 0.1.0
  */
 public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends AbstractAggregateRootRepositoryBuilder<T> {
   private Path folderPath;
   private boolean prettyPrinting;
-  private Serializer<T, JsonObject> writer;
-  private Deserializer<T, JsonObject> reader;
+  private TypeAdapter<T, JsonObject> typeAdapter;
 
   /**
-   * Package-private constructor to enforce the use of the static factory method
-   * {@link GsonAggregateRootRepository#builder()}.
+   * Package-private constructor.
+   * <p>Use {@link GsonAggregateRootRepository#builder()} to obtain a new instance.</p>
    */
   GsonAggregateRootRepositoryBuilder() {
   }
 
   /**
-   * Sets the root directory where the JSON files will be stored.
+   * Defines the root directory for the JSON storage.
    *
-   * @param folderPath The directory path.
-   * @return This builder instance for chaining.
+   * @param folderPath The {@link Path} to the directory.
+   * @return This builder instance for method chaining.
    */
   @Contract("_ -> this")
   public @NotNull GsonAggregateRootRepositoryBuilder<T> folder(final @NotNull Path folderPath) {
@@ -78,11 +83,11 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
   }
 
   /**
-   * Configures the JSON output format.
+   * Sets the visual format of the generated JSON files.
    *
-   * @param prettyPrinting If {@code true}, the JSON will be indented (easier to read/debug).
-   *                       If {@code false}, the JSON will be minified (saves space).
-   * @return This builder instance for chaining.
+   * @param prettyPrinting If {@code true}, applies indentation and line breaks.
+   *                       Useful for development and manual debugging.
+   * @return This builder instance for method chaining.
    */
   @Contract("_ -> this")
   public @NotNull GsonAggregateRootRepositoryBuilder<T> prettyPrinting(final boolean prettyPrinting) {
@@ -91,78 +96,45 @@ public class GsonAggregateRootRepositoryBuilder<T extends AggregateRoot> extends
   }
 
   /**
-   * Sets the serializer responsible for converting the Aggregate Root into a Gson {@link JsonObject}.
+   * Sets the adapter responsible for converting the domain object into a {@link JsonObject}.
    *
-   * @param writer The serializer implementation.
-   * @return This builder instance for chaining.
+   * @param typeAdapter The codec implementation.
+   * @return This builder instance for method chaining.
    */
   @Contract("_ -> this")
-  public @NotNull GsonAggregateRootRepositoryBuilder<T> serializer(
-    final @NotNull Serializer<T, JsonObject> writer
-  ) {
-    this.writer = writer;
+  public @NotNull GsonAggregateRootRepositoryBuilder<T> typeAdapter(final @NotNull TypeAdapter<T, JsonObject> typeAdapter) {
+    this.typeAdapter = typeAdapter;
     return this;
   }
 
   /**
-   * Sets the deserializer responsible for reconstructing the Aggregate Root from a Gson {@link JsonObject}.
+   * Validates the configuration and constructs the {@link GsonAggregateRootRepository}.
    *
-   * @param reader The deserializer implementation.
-   * @return This builder instance for chaining.
-   */
-  @Contract("_ -> this")
-  public @NotNull GsonAggregateRootRepositoryBuilder<T> deserializer(
-    final @NotNull Deserializer<T, JsonObject> reader
-  ) {
-    this.reader = reader;
-    return this;
-  }
-
-  /**
-   * Ensures that the storage directory exists.
-   * <p>
-   * If the directory does not exist, it attempts to create it (including any necessary parent directories).
+   * <p><b>Side Effects:</b> This method checks if the specified {@code folderPath} exists.
+   * If it does not, it attempts to create the directory and all necessary parent
+   * directories using {@link Files#createDirectories}.</p>
    *
-   * @param path The path to check and create.
-   * @throws RuntimeException If an I/O error occurs while creating the directory.
-   */
-  private void ensureDirectoryExists(final @NotNull Path path) {
-    if (Files.notExists(path)) {
-      try {
-        Files.createDirectories(path);
-      } catch (IOException e) {
-        // Fail fast: We cannot proceed if we can't write to the disk.
-        throw new RuntimeException("Failed to initialize storage directory at: " + path, e);
-      }
-    }
-  }
-
-  /**
-   * Builds the final {@link GsonAggregateRootRepository} with the specified executor.
-   * <p>
-   * This method validates the configuration and attempts to initialize the storage directory
-   * on the file system.
-   *
-   * @param executor The executor to use for async operations in the repository.
-   * @return The fully configured repository.
-   * @throws NullPointerException If any required configuration is missing.
-   * @throws RuntimeException     If the storage directory cannot be created.
+   * @param executor The {@link Executor} used to run asynchronous repository tasks.
+   * @return A fully initialized {@link AsyncAggregateRootRepository}.
+   * @throws NullPointerException if any mandatory field (folder, adapter) is missing.
+   * @throws RuntimeException if the storage directory is inaccessible or cannot be created.
    */
   @Override
   @Contract("_ -> new")
   public @NotNull AsyncAggregateRootRepository<T> build(final @NotNull Executor executor) {
-    Objects.requireNonNull(this.folderPath, "Folder path must not be null");
-    Objects.requireNonNull(this.writer, "Serializer must not be null");
-    Objects.requireNonNull(this.reader, "Deserializer must not be null");
-
-    this.ensureDirectoryExists(this.folderPath);
-
+    if (Files.notExists(this.folderPath)) {
+      try {
+        Files.createDirectories(this.folderPath);
+      } catch (IOException e) {
+        // Fail fast: We cannot proceed if we can't write to the disk.
+        throw new RuntimeException("Failed to initialize storage directory at: " + this.folderPath, e);
+      }
+    }
     return new GsonAggregateRootRepository<>(
       executor,
       this.folderPath,
       this.prettyPrinting,
-      this.writer,
-      this.reader
+      this.typeAdapter
     );
   }
 }
