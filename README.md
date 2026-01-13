@@ -19,7 +19,7 @@ With **Storage**, you define *what* needs to be saved in your Domain Layer and l
 
 ## 📦 Installation
 
-Currently, this library is in development. To use it, you must select the **distribution module** that fits your needs (e.g., Gson, Caffeine).
+Currently, this library is in development. To use it, you must select the **distribution module** that fits your needs (e.g., Gson, Yaml, Caffeine).
 
 ### 1. Clone and Install (Local Mode)
 
@@ -144,7 +144,7 @@ This is where you decide which implementation to use (Gson, YAML, etc.) and inje
 // Example import assuming you used 'storage-gson-dist'
 
 import repository.team.emptyte.storage.domain.AsyncAggregateRootRepository;
-import team.emptyte.storage.infrastructure.gson.GsonAggregateRootRepository;
+import team.emptyte.storage.infrastructure.gson.YamlAggregateRootRepository;
 import codec.team.emptyte.storage.codec.TypeAdapter;
 import com.google.gson.JsonObject;
 import java.nio.file.Path;
