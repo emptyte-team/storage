@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
  * @param <T> The domain object type (e.g., User, Player, Location).
  * @param <R> The representation type (e.g., String, JsonElement, byte[]).
  */
-public interface TypeAdapter<T, R> {
+public class TypeAdapter<T, R> {
 
   /**
    * Converts the given domain object into its storage representation.
@@ -43,7 +43,9 @@ public interface TypeAdapter<T, R> {
    * @param value The object of type {@code T} to be encoded. Must not be null.
    * @return The resulting representation of type {@code R}.
    */
-  @NotNull R write(final @NotNull T value);
+  public @NotNull R write(final @NotNull T value) {
+
+  }
 
   /**
    * Reconstructs the original domain object from its representation.
@@ -51,5 +53,7 @@ public interface TypeAdapter<T, R> {
    * @param value The representation of type {@code R} to be decoded. Must not be null.
    * @return The reconstructed object of type {@code T}.
    */
-  @NotNull T read(final @NotNull R value);
+  public @NotNull T read(final @NotNull R value) {
+    return null;
+  }
 }
