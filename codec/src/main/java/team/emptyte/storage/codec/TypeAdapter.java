@@ -42,9 +42,10 @@ public class TypeAdapter<T, R> {
    *
    * @param value The object of type {@code T} to be encoded. Must not be null.
    * @return The resulting representation of type {@code R}.
+   * @throws NullPointerException if {@code value} is null.
    */
   public @NotNull R write(final @NotNull T value) {
-
+    throw new UnsupportedOperationException("write operation not implemented");
   }
 
   /**
@@ -52,8 +53,9 @@ public class TypeAdapter<T, R> {
    *
    * @param value The representation of type {@code R} to be decoded. Must not be null.
    * @return The reconstructed object of type {@code T}.
+   * @throws NullPointerException if {@code value} is null.
    */
   public @NotNull T read(final @NotNull R value) {
-    return null;
+    throw new UnsupportedOperationException("read operation not implemented");
   }
 }
