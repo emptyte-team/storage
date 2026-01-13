@@ -23,13 +23,14 @@
  */
 package team.emptyte.storage.infrastructure.gson;
 
-import org.spongepowered.configurate.serialize.TypeSerializer;
 import team.emptyte.storage.domain.AggregateRoot;
 import team.emptyte.storage.domain.repository.AsyncAggregateRootRepository;
 import team.emptyte.storage.domain.repository.builder.AbstractAggregateRootRepositoryBuilder;
 
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
+
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
