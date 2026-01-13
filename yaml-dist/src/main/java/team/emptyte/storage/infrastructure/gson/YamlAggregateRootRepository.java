@@ -46,6 +46,7 @@ import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -129,7 +130,7 @@ public class YamlAggregateRootRepository<T extends AggregateRoot> extends AsyncA
    *
    * @return a new instance of {@link YamlAggregateRootRepositoryBuilder}.
    */
-  public @NotNull YamlAggregateRootRepositoryBuilder<T> builder() {
+  public static <T extends AggregateRoot> @NotNull YamlAggregateRootRepositoryBuilder<T> builder() {
     return new YamlAggregateRootRepositoryBuilder<>();
   }
 
